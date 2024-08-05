@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>FUNL.AI</title>
+  <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: #DDD;
+      margin: 0;
+      padding: 0;
+    }
+    #container {
+      width: 90%;
+      height: 70vh;
+      margin: auto;
+      position: relative;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      width: 90%;
+      margin: auto;
+      max-height: 44px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+    }
+    .logo img {
+      height: 44px;
+    }
+    .wallet {
+      display: flex;
+      align-items: center;
+    }
+    .wallet select {
+      background-color: #333;
+      color: #DDD;
+      border: 1px solid #444;
+      padding: 5px;
+      margin-left: 10px;
+    }
+    .selectors {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin: 10px 0;
+      width: 90%;
+      margin: auto;
+    }
+    .selectors select,
+    .time-selector button {
+      background-color: #333;
+      color: #DDD;
+      border: 1px solid #444;
+      padding: 5px;
+      margin-right: 10px;
+      max-height: 44px;
+    }
+    .time-selector button.selected {
+      background-color: #E76238;
+      color: #000;
+    }
+    table {
+      width: 90%;
+      margin: auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #E76238;
+    }
+    td {
+      background-color: #333;
+    }
+    .buy {
+      color: green;
+    }
+    .sell {
+      color: red;
+    }
+    #overlay-data {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(34, 34, 34, 0.7);
+      padding: 5px;
+      border-radius: 5px;
+      color: #FFF;
+    }
+    #wallet-address {
+      text-align: center;
+      margin: 10px 0;
+      font-family: "Courier New", Courier, monospace;
+      width: 100%;
+    }
+    #price-data {
+      color: #FFF;
+      margin-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
+    </div>
+    <div class="wallet">
+      <select id="wallet">
+        <option value="0x033f9983a14F6589c49809eC832e93502E3333dA">0x033f...333dA</option>
+        <option value="0xE35f033B28e9EfdA7788C74f5dF634fD0c937dC1">0xE35f...7dC1</option>
+        <option value="0xEC3AdD31D1Bc8017bA29B931d8B113313853642B">0xEC3A...642B</option>
+        <option value="0x4d6E4943DA76D5277ddd837c69746986cACeca94">0x4d6E...eca94</option>
+        <option value="0xEF077321579680eF4f79f43664544E468AFE8992">0xEF07...8992</option>
+        <option value="0xA9eB51fA119B3d5A362798a87F91449E918EAa85">0xA9eB...Aa85</option>
+        <option value="0xb190a0FD3B9CA85F749Cd8778516185791fae01f">0xb190...e01f</option>
+        <option value="0xD9De14b18b8181eD87B2B7812888cBe3555FE905">0xD9De...E905</option>
+        <option value="0x92DBc148C73590DcCe6684F43300eFB101249aD4">0x92DB...9aD4</option>
+        <option value="0xa6B00cd67b25644A2847791d8cd67c4FF2369Ec2">0xa6B0...9Ec2</option>
+        <option value="0xAcC899c35C5B3eEA73be625C1219832A0a65A34e">0xAcC8...A34e</option>
+        <option value="0x1A6CeC2495caB0c43aa007298126Ab289bd7D395">0x1A6C...D395</option>
+        <option value="0x9CAE83896Cd5C90cC9ab43F6394C9E0174700964">0x9CAE...0964</option>
+        <option value="0x386671345e39Fa3651d52595c48c0A4d696f7169">0x3866...7169</option>
+        <option value="0xc6e6142f13c1C482d2271307ed3adFBE1C6cA40D">0xc6e6...A40D</option>
+        <option value="0xFd94634faa0729207168Bcc9c987eaa7c68B876e">0xFd94...876e</option>
+        <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
+        <option value="0x2733f4870C97966ba1943b50eDD32c7a1916CBa9">0x2733...CBa9</option>
+        <option value="0x9a49c581bB4417CF5CBc3D427F185BDB6a067FE0">0x9a49...7FE0</option>
+        <option value="0x023D25C2DcA8EE5CF58eD5622B815A48C52627b1">0x023D...27b1</option>
+        <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
+        <option value="0x23D53739D0A01a585379E16711868a948efD1616">0x23D5...1616</option>
+      </select>      
+    </div>
+  </div>
+
+  <div class="selectors">
+    <select id="algo">
+      <option value="APOLLO">APOLLO</option>
+      <option value="DAYTONA">DAYTONA</option>
+      <option value="EXCALIBUR">EXCALIBUR</option>
+    </select>
+    <select id="symbol">
+      <option value="BTC-USDT">BTC-USDT</option>
+      <option value="BRETT-USDC">BRETT-USDC</option>
+      <option value="MEW-USDC">MEW-USDC</option>
+    </select>
+    <div class="time-selector">
+      <button data-resolution="1">1m</button>
+      <button data-resolution="5">5m</button>
+      <button data-resolution="15" class="selected">15m</button>
+      <button data-resolution="30">30m</button>
+      <button data-resolution="60">1H</button>
+      <button data-resolution="1D">1D</button>
+      <button data-resolution="1W">1W</button>
+      <button data-resolution="1M">1M</button>
+    </div>
+    <div id="price-data">Price: -- 24h Change: -- 24h Volume: --</div>
+  </div>
+
+  <div id="container">
+    <div id="overlay-data">Price: -- 24h Change: -- 24h Volume: --</div>
+  </div>
+
+  <div id="wallet-address">
+    0x033f9983a14F6589c49809eC832e93502E3333dA
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Side</th>
+        <th>Quantity</th>
+        <th>Price</th>
+        <th>PnL</th>
+        <th>Fee</th>
+      </tr>
+    </thead>
+    <tbody id="trade-history">
+      <!-- Trade history data will be injected here -->
+    </tbody>
+  </table>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script>
+    function getDynamicURL(symbol, resolution, from, to) {
+      return `https://api-evm.orderly.org/v1/tv/history?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}`;
+    }
+
+    function getTimeframe(days) {
+      const now = Math.floor(Date.now() / 1000);
+      const from = now - (days * 24 * 60 * 60);
+      return { from, to: now };
+    }
+
+    const symbol = 'PERP_BTC_USDC';
+    let resolution = '15';
+    const timeframe = getTimeframe(365);
+
+    const chart = LightweightCharts.createChart(document.getElementById('container'), {
+      layout: {
+        background: { color: '#222' },
+        textColor: '#DDD',
+      },
+      grid: {
+        vertLines: { color: '#444' },
+        horzLines: { color: '#444' },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: true,
+      },
+    });
+
+    chart.priceScale().applyOptions({
+      borderColor: '#71649C',
+    });
+
+    chart.timeScale().applyOptions({
+      borderColor: '#71649C',
+    });
+
+    const candleSeries = chart.addCandlestickSeries({
+      wickUpColor: '#FFFFFF', // White
+      upColor: '#FFFFFF', // White
+      wickDownColor: '#E76238', // Orange
+      downColor: '#E76238', // Orange
+      borderVisible: false
+    });
+
+    function fetchData() {
+      fetch(getDynamicURL(symbol, resolution, timeframe.from, timeframe.to))
+        .then(res => res.json())
+        .then(data => {
+          const cdata = data.t.map((time, index) => {
+            return {
+              time: time,
+              open: parseFloat(data.o[index]),
+              high: parseFloat(data.h[index]),
+              low: parseFloat(data.l[index]),
+              close: parseFloat(data.c[index]),
+              volume: parseFloat(data.v[index])
+            };
+          });
+
+          candleSeries.setData(cdata);
+
+          const binanceResolution = resolution === '1' ? '1m' :
+                                    resolution === '5' ? '5m' :
+                                    resolution === '15' ? '15m' :
+                                    resolution === '30' ? '30m' :
+                                    resolution === '60' ? '1h' :
+                                    resolution === '1D' ? '1d' :
+                                    resolution === '1W' ? '1w' : '1M';
+
+          const binanceSocket = new WebSocket(`wss://stream.binance.com:9443/ws/btcusdt@kline_${binanceResolution}`);
+
+          binanceSocket.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            const candlestick = message.k;
+
+            const liveCandle = {
+              time: candlestick.t / 1000,
+              open: parseFloat(candlestick.o),
+              high: parseFloat(candlestick.h),
+              low: parseFloat(candlestick.l),
+              close: parseFloat(candlestick.c)
+            };
+
+            candleSeries.update(liveCandle);
+
+            const price = liveCandle.close;
+            const change = ((price - cdata[cdata.length - 1].close) / cdata[cdata.length - 1].close * 100).toFixed(2);
+            const volume = cdata.reduce((acc, val) => acc + parseFloat(val.volume || 0), 0).toFixed(2);
+
+            document.getElementById('overlay-data').innerText = `Price: ${price} 24h Change: ${change}% 24h Volume: ${volume}`;
+            document.getElementById('price-data').innerText = `Price: ${price} 24h Change: ${change}% 24h Volume: ${volume}`;
+          };
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    function updateTradeHistory(wallet) {
+      fetch(`https://data.dbltecnologia.com.br/orders?account=${wallet}`)
+        .then(res => res.json())
+        .then(tradeData => {
+          const trades = tradeData.data.data.rows;
+          const tradeHistory = document.getElementById('trade-history');
+          tradeHistory.innerHTML = '';
+
+          trades.forEach(trade => {
+            const tradeRow = document.createElement('tr');
+            const sideClass = trade.side === 'BUY' ? 'buy' : 'sell';
+            tradeRow.innerHTML = `
+              <td>${new Date(trade.created_time).toLocaleString()}</td>
+              <td class="${sideClass}">${trade.side}</td>
+              <td class="${sideClass}">${trade.total_executed_quantity}</td>
+              <td>${trade.average_executed_price}</td>
+              <td>${trade.realized_pnl || '-'}</td>
+              <td>${trade.total_fee}</td>
+            `;
+            tradeHistory.appendChild(tradeRow);
+          });
+
+          const markers = trades.map(trade => {
+            const tradeTime = Math.floor(trade.created_time / 1000);
+            const timeString = new Date(trade.created_time).toLocaleString('en-US', { timeZone: 'America/New_York' });
+
+            return {
+              time: tradeTime,
+              position: 'aboveBar',
+              color: trade.side === 'BUY' ? 'green' : 'red',
+              shape: trade.side === 'BUY' ? 'arrowUp' : 'arrowDown',
+              text: `${trade.side.toUpperCase()} ${trade.total_executed_quantity} @ ${trade.average_executed_price} (${(trade.total_executed_quantity * trade.average_executed_price).toFixed(2)})\n${timeString}`
+            };
+          });
+
+          candleSeries.setMarkers(markers);
+        })
+        .catch(error => console.error('Error fetching trade history:', error));
+    }
+
+    document.getElementById('wallet').addEventListener('change', function() {
+      updateTradeHistory(this.value);
+      document.getElementById('wallet-address').innerText = this.value;
+    });
+
+    document.querySelectorAll('.time-selector button').forEach(button => {
+      button.addEventListener('click', function() {
+        document.querySelectorAll('.time-selector button').forEach(btn => btn.classList.remove('selected'));
+        this.classList.add('selected');
+        resolution = this.getAttribute('data-resolution');
+        fetchData();
+      });
+    });
+
+    function autoRefresh() {
+      fetchData();
+      updateTradeHistory(document.getElementById('wallet').value);
+    }
+
+    setInterval(autoRefresh, 60000);
+
+    fetchData();
+    updateTradeHistory(document.getElementById('wallet').value);
+  </script>
+</body>
+</html>
