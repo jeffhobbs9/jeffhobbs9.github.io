@@ -314,7 +314,7 @@
 
           const markers = trades.map(trade => {
             const tradeTime = Math.floor(trade.created_time / 1000);
-            const timeString = new Date(trade.created_time).toLocaleString('en-US', { timeZone: 'America/New_York' });
+            const timeString = new Date(trade.created_time).toLocaleString('en-US', { timeZone: 'UTC' });
 
             return {
               time: tradeTime,
