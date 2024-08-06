@@ -106,7 +106,7 @@
     <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
   </div>
   <div class="content">
-    <div class="refresh-timer" id="refresh-timer">Next refresh in: 10:00</div>
+    <div class="refresh-timer" id="refresh-timer">Next refresh in: 3:00</div>
     <table id="positionsTable">
       <thead>
         <tr>
@@ -130,7 +130,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       const refreshTimerElement = document.getElementById('refresh-timer');
       const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
-      let refreshTime = 600;
+      let refreshTime = 180;
 
       function updateRefreshTimer() {
         const minutes = Math.floor(refreshTime / 60);
@@ -139,7 +139,7 @@
         if (refreshTime > 0) {
           refreshTime--;
         } else {
-          refreshTime = 600;
+          refreshTime = 180;
           fetchData();
         }
       }
