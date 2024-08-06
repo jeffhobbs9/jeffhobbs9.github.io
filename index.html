@@ -8,7 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       background-color: #222;
-      color: #DDD;
+      color: #c3c2c2;
       margin: 0;
       padding: 0;
     }
@@ -109,7 +109,7 @@
       background-color: rgba(34, 34, 34, 0.7);
       padding: 5px;
       border-radius: 5px;
-      color: #FFF;
+      color: #DDD;
     }
     #wallet-address {
       text-align: center;
@@ -130,7 +130,7 @@
       color: #000;
     }
     #price-data {
-      color: #FFF;
+      color: #DDD;
       margin-left: 20px;
     }
     #legend {
@@ -262,11 +262,11 @@
     });
 
     chart.priceScale().applyOptions({
-      borderColor: '#71649C',
+      borderColor: '#E76238',
     });
 
     chart.timeScale().applyOptions({
-      borderColor: '#71649C',
+      borderColor: '#E76238',
     });
 
     const candleSeries = chart.addCandlestickSeries({
@@ -400,6 +400,8 @@
 
     fetchData();
     updateTradeHistory(document.getElementById('wallet').value);
+
+    
   </script>
 </body>
 </html>
