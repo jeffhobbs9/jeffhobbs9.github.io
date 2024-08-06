@@ -8,7 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       background-color: #222;
-      color: #c3c2c2;
+      color: #DDD;
       margin: 0;
       padding: 0;
     }
@@ -143,6 +143,17 @@
       line-height: 18px;
       font-weight: 300;
     }
+    .tooltip {
+      position: absolute;
+      background-color: rgba(34, 34, 34, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      color: #FFF;
+      font-size: 12px;
+      z-index: 3;
+      pointer-events: none;
+      border: 1px solid #E76238;
+    }
   </style>
 </head>
 <body>
@@ -228,6 +239,8 @@
       <!-- Trade history data will be injected here -->
     </tbody>
   </table>
+
+  <div class="tooltip" id="tooltip"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
@@ -367,7 +380,6 @@
               color: trade.side === 'BUY' ? 'white' : '#E76238',
               shape: trade.side === 'BUY' ? 'arrowUp' : 'arrowDown',
               text: `${trade.side.toUpperCase()} ${trade.total_executed_quantity}`
-              //text: `${trade.side.toUpperCase()} ${trade.total_executed_quantity})`
             };
           });
 
@@ -401,7 +413,37 @@
     fetchData();
     updateTradeHistory(document.getElementById('wallet').value);
 
-    
+
+
+
+
+
+    // Tooltip functionality
+    const tooltip = document.getElementById('tooltip');
+    chart.subscribeCrosshairMove(function(param) {
+      if (!param || !param.time || !param.seriesData.get(candleSeries)) {
+        tooltip.style.display = 'none';
+        return;
+      }
+      
+      const { time, value } = param;
+      const price = param.seriesData.get(candleSeries).close;
+      const high = param.seriesData.get(candleSeries).high;
+      const low = param.seriesData.get(candleSeries).low;
+   
+
+      tooltip.style.display = 'block';
+      tooltip.style.left = `${param.point.x + 100}px`;
+      tooltip.style.top = `${param.point.y + 100}px`;
+      tooltip.innerHTML = `
+        <div><b>FUNL AI</b></div>
+        <div>Price: ${price}</div>
+         <div>High: ${high}</div>
+         <div>Low: ${low}</div>
+        <div>Time: ${new Date(time * 1000).toLocaleString('en-US', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</div>
+      
+      `;
+    });
   </script>
 </body>
 </html>
