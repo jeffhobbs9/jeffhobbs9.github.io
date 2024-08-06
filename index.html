@@ -350,7 +350,7 @@
     }
 
     function updateTradeHistory(wallet) {
-      fetch(`https://testnet.dbltecnologia.com.br/orders?account=${wallet}`)
+      fetch(`https://data.dbltecnologia.com.br/orders?account=${wallet}`)
         .then(res => res.json())
         .then(tradeData => {
           const trades = tradeData.data.data.rows;
