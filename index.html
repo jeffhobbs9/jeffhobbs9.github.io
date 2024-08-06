@@ -45,6 +45,20 @@
       padding: 5px;
       margin-left: 10px;
     }
+    #watermark {
+      position: absolute;
+      inset: 0px;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+    #watermark img {
+      opacity: 0.2;
+      max-width: 80%;
+      max-height: 80%;
+    }
     .selectors {
       display: flex;
       align-items: center;
@@ -59,11 +73,11 @@
       color: #DDD;
       border: 1px solid #444;
       padding: 5px;
-      margin-right: 10px;
+      margin-right: 10px; /* Added spacing */
       max-height: 44px;
     }
     .time-selector button.selected {
-      background-color: #E76238;
+      background-color: #E76238; /* Softer orange */
       color: #000;
     }
     table {
@@ -77,16 +91,16 @@
       text-align: left;
     }
     th {
-      background-color: #E76238;
+      background-color: #E76238; /* Softer orange */
     }
     td {
       background-color: #333;
     }
     .buy {
-      color: green;
+      color: white;
     }
     .sell {
-      color: red;
+      color: #E76238;
     }
     #overlay-data {
       position: absolute;
@@ -103,9 +117,31 @@
       font-family: "Courier New", Courier, monospace;
       width: 100%;
     }
+    .time-selector button {
+      background-color: #333;
+      color: #DDD;
+      border: 1px solid #444;
+      padding: 5px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+    .time-selector button.selected {
+      background-color: #E76238;
+      color: #000;
+    }
     #price-data {
       color: #FFF;
       margin-left: 20px;
+    }
+    #legend {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 1;
+      font-size: 14px;
+      font-family: sans-serif;
+      line-height: 18px;
+      font-weight: 300;
     }
   </style>
 </head>
@@ -167,6 +203,9 @@
   </div>
 
   <div id="container">
+    <div id="watermark">
+      <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Watermark">
+    </div>
     <div id="overlay-data">Price: -- 24h Change: -- 24h Volume: --</div>
   </div>
 
@@ -205,7 +244,7 @@
 
     const symbol = 'PERP_BTC_USDC';
     let resolution = '15';
-    const timeframe = getTimeframe(365);
+    const timeframe = getTimeframe(90); // Changed to 90 days
 
     const chart = LightweightCharts.createChart(document.getElementById('container'), {
       layout: {
@@ -238,6 +277,11 @@
       borderVisible: false
     });
 
+    const legend = document.createElement('div');
+    legend.setAttribute('id', 'legend');
+    legend.innerHTML = `BITCOIN USDC Perp Contract · <span id="chart-resolution">${resolution}</span> · FUNL AI`;
+    document.getElementById('container').appendChild(legend);
+
     function fetchData() {
       fetch(getDynamicURL(symbol, resolution, timeframe.from, timeframe.to))
         .then(res => res.json())
@@ -260,9 +304,11 @@
                                     resolution === '15' ? '15m' :
                                     resolution === '30' ? '30m' :
                                     resolution === '60' ? '1h' :
+                                    resolution === '240' ? '4h' :
+                                    resolution === '720' ? '12h' :
                                     resolution === '1D' ? '1d' :
                                     resolution === '1W' ? '1w' : '1M';
-
+                                    
           const binanceSocket = new WebSocket(`wss://stream.binance.com:9443/ws/btcusdt@kline_${binanceResolution}`);
 
           binanceSocket.onmessage = function(event) {
@@ -291,7 +337,7 @@
     }
 
     function updateTradeHistory(wallet) {
-      fetch(`https://data.dbltecnologia.com.br/orders?account=${wallet}`)
+      fetch(`https://testnet.dbltecnologia.com.br/orders?account=${wallet}`)
         .then(res => res.json())
         .then(tradeData => {
           const trades = tradeData.data.data.rows;
@@ -302,7 +348,7 @@
             const tradeRow = document.createElement('tr');
             const sideClass = trade.side === 'BUY' ? 'buy' : 'sell';
             tradeRow.innerHTML = `
-              <td>${new Date(trade.created_time).toLocaleString()}</td>
+              <td>${new Date(trade.created_time).toLocaleString('en-US', { timeZone: 'UTC' })}</td>
               <td class="${sideClass}">${trade.side}</td>
               <td class="${sideClass}">${trade.total_executed_quantity}</td>
               <td>${trade.average_executed_price}</td>
@@ -314,14 +360,14 @@
 
           const markers = trades.map(trade => {
             const tradeTime = Math.floor(trade.created_time / 1000);
-            const timeString = new Date(trade.created_time).toLocaleString('en-US', { timeZone: 'UTC' });
 
             return {
               time: tradeTime,
-              position: 'aboveBar',
-              color: trade.side === 'BUY' ? 'green' : 'red',
+              position: trade.side === 'BUY' ? 'belowBar' : 'aboveBar',
+              color: trade.side === 'BUY' ? 'white' : '#E76238',
               shape: trade.side === 'BUY' ? 'arrowUp' : 'arrowDown',
-              text: `${trade.side.toUpperCase()} ${trade.total_executed_quantity} @ ${trade.average_executed_price} (${(trade.total_executed_quantity * trade.average_executed_price).toFixed(2)})\n${timeString}`
+              text: `${trade.side.toUpperCase()} ${trade.total_executed_quantity}`
+              //text: `${trade.side.toUpperCase()} ${trade.total_executed_quantity})`
             };
           });
 
@@ -340,6 +386,7 @@
         document.querySelectorAll('.time-selector button').forEach(btn => btn.classList.remove('selected'));
         this.classList.add('selected');
         resolution = this.getAttribute('data-resolution');
+        document.getElementById('chart-resolution').innerText = resolution;
         fetchData();
       });
     });
@@ -349,10 +396,10 @@
       updateTradeHistory(document.getElementById('wallet').value);
     }
 
-    setInterval(autoRefresh, 60000);
+    setInterval(autoRefresh, 60000); // Auto-refresh every 60 seconds
 
     fetchData();
     updateTradeHistory(document.getElementById('wallet').value);
   </script>
 </body>
-</html> 
+</html>
