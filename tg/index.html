@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>FUNL.AI </title>
+  <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #222;
+      color: #DDD;
+      margin: 0;
+      padding: 0;
+    }
+    #container {
+      width: 90%;
+      height: 70vh;
+      margin: auto;
+      position: relative;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      width: 90%;
+      margin: auto;
+      max-height: 44px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+    }
+    .logo img {
+      height: 44px;
+    }
+    #watermark {
+      position: absolute;
+      inset: 0px;
+      z-index: 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      pointer-events: none;
+    }
+    #watermark img {
+      opacity: 0.2;
+      max-width: 80%;
+      max-height: 80%;
+    }
+    .selectors {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin: 10px 0;
+      width: 90%;
+      margin: auto;
+    }
+    .selectors select {
+      background-color: #333;
+      color: #DDD;
+      border: 1px solid #444;
+      padding: 5px;
+      margin-right: 10px;
+      max-height: 44px;
+    }
+    #overlay-data {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(34, 34, 34, 0.7);
+      padding: 5px;
+      border-radius: 5px;
+      color: #DDD;
+    }
+    #price-data {
+      color: #DDD;
+      margin-left: 20px;
+    }
+    #legend {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 1;
+      font-size: 14px;
+      font-family: sans-serif;
+      line-height: 18px;
+      font-weight: 300;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
+    </div>
+  </div>
+
+  <div class="selectors">
+    <select id="symbol">
+      <option value="PERP_BTC_USDC">BTC-USDC</option>
+      <option value="PERP_BRETT_USDC">BRETT-USDC</option>
+      <option value="PERP_MEW_USDC">MEW-USDC</option>
+      <option value="PERP_SOL_USDC">SOL-USDC</option>
+      <option value="PERP_1000PEPE_USDC">PEPE-USDC</option>
+    </select>
+    <select id="resolution">
+      <option value="1">1m</option>
+      
+      <option value="5">5m</option>
+      
+      <option value="15">15m</option>
+      <option value="30">30m</option>
+      <option value="60">1H</option>
+
+      <option value="1D">1D</option>
+      <option value="1W">1W</option>
+      <option value="1M">1M</option>
+    </select>
+    <div id="price-data">Price: -- 24h Change: -- 24h Volume: --</div>
+  </div>
+
+  <div id="container">
+    <div id="watermark">
+      <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Watermark">
+    </div>
+    <div id="overlay-data">Price: -- 24h Change: -- 24h Volume: --</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script>
+    function getDynamicURL(symbol, resolution, from, to) {
+      return `https://api-evm.orderly.org/v1/tv/history?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}`;
+    }
+
+    function getTimeframe(days) {
+      const now = Math.floor(Date.now() / 1000);
+      const from = now - (days * 24 * 60 * 60);
+      return { from, to: now };
+    }
+
+    function formatForBinance(symbol) {
+      return symbol.replace('PERP_', '').replace('_USDC', 'usdt').toLowerCase();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const symbolElement = document.getElementById('symbol');
+      const resolutionElement = document.getElementById('resolution');
+      let symbol = symbolElement.value; // Initial value
+      let resolution = resolutionElement.value; // Initial value
+
+      symbolElement.addEventListener('change', function() {
+        symbol = symbolElement.value;
+        fetchData();
+      });
+
+      resolutionElement.addEventListener('change', function() {
+        resolution = resolutionElement.value;
+        fetchData();
+      });
+
+      const timeframe = getTimeframe(90); // Changed to 90 days
+
+      const chart = LightweightCharts.createChart(document.getElementById('container'), {
+        layout: {
+          background: { color: '#222' },
+          textColor: '#DDD',
+        },
+        grid: {
+          vertLines: { color: '#444' },
+          horzLines: { color: '#444' },
+        },
+        timeScale: {
+          timeVisible: true,
+          secondsVisible: true,
+        },
+      });
+
+      chart.priceScale().applyOptions({
+        borderColor: '#E76238',
+      });
+
+      chart.timeScale().applyOptions({
+        borderColor: '#E76238',
+      });
+
+      const candleSeries = chart.addCandlestickSeries({
+        wickUpColor: '#FFFFFF', // White
+        upColor: '#FFFFFF', // White
+        wickDownColor: '#E76238', // Orange
+        downColor: '#E76238', // Orange
+        borderVisible: false
+      });
+
+      const legend = document.createElement('div');
+      legend.setAttribute('id', 'legend');
+      legend.innerHTML = `<span id="chart-symbol">${symbol}</span> Perp Contract · <span id="chart-resolution">${resolution}</span> · FUNL AI`;
+      document.getElementById('container').appendChild(legend);
+
+      let binanceSocket;
+
+      function fetchData() {
+        fetch(getDynamicURL(symbol, resolution, timeframe.from, timeframe.to))
+          .then(res => res.json())
+          .then(data => {
+            const cdata = data.t.map((time, index) => {
+              return {
+                time: time,
+                open: parseFloat(data.o[index]),
+                high: parseFloat(data.h[index]),
+                low: parseFloat(data.l[index]),
+                close: parseFloat(data.c[index]),
+                volume: parseFloat(data.v[index])
+              };
+            });
+
+            candleSeries.setData(cdata);
+
+            if (binanceSocket) {
+              binanceSocket.close();
+            }
+
+            const binanceSymbol = formatForBinance(symbol);
+            const binanceResolution = resolution === '1' ? '1m' :
+                                      resolution === '3' ? '3m' :
+                                      resolution === '5' ? '5m' :
+                                      resolution === '10' ? '10m' :
+                                      resolution === '15' ? '15m' :
+                                      resolution === '30' ? '30m' :
+                                      resolution === '60' ? '1h' :
+                                      resolution === '1D' ? '1d' :
+                                      resolution === '1W' ? '1w' : '1M';
+
+            binanceSocket = new WebSocket(`wss://stream.binance.com:9443/ws/${binanceSymbol}@kline_${binanceResolution}`);
+
+            binanceSocket.onmessage = function(event) {
+              const message = JSON.parse(event.data);
+              const candlestick = message.k;
+
+              const liveCandle = {
+                time: candlestick.t / 1000,
+                open: parseFloat(candlestick.o),
+                high: parseFloat(candlestick.h),
+                low: parseFloat(candlestick.l),
+                close: parseFloat(candlestick.c)
+              };
+
+              candleSeries.update(liveCandle);
+
+              const price = liveCandle.close;
+              const change = ((price - cdata[cdata.length - 1].close) / cdata[cdata.length - 1].close * 100).toFixed(2);
+              const volume = cdata.reduce((acc, val) => acc + parseFloat(val.volume || 0), 0).toFixed(2);
+
+              document.getElementById('overlay-data').innerText = `Price: ${price} 24h Change: ${change}% 24h Volume: ${volume}`;
+              document.getElementById('price-data').innerText = `Price: ${price} 24h Change: ${change}% 24h Volume: ${volume}`;
+            };
+          })
+          .catch(error => console.error('Error fetching data:', error));
+      }
+
+      fetchData();
+    });
+  </script>
+</body>
+</html>
