@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Statistics Daily Report</title>
+    <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+    <style>
+        body {
+            background-color: #1b1b1b;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        h1, h2 {
+            color: #e76238;
+        }
+        .navbar {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 10px;
+            background-color: #1b1b1b;
+        }
+        .logo {
+            height: 80px; /* Adjusted logo size */
+            margin-right: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #333;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #e76238;
+        }
+        tr:nth-child(even) {
+            background-color: #2a2a2a;
+        }
+        .wallet {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .wallet select, .wallet input {
+            background-color: #333;
+            color: #DDD;
+            border: 1px solid #444;
+            padding: 5px;
+            margin-left: 10px;
+        }
+        .wallet input {
+            display: none;
+        }
+        .pnl-positive {
+            color: #00ff00; /* Green for positive values */
+        }
+        .pnl-negative {
+            color: #ff0000; /* Red for negative values */
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo" class="logo">
+        <h2>Account Statistics Daily Report</h2>
+    </div>
+    <div class="wallet">
+        <label for="wallet">Wallet Address:</label>
+        <select id="wallet" onchange="toggleManualInput(this.value)">
+                <option value="0x033f9983a14F6589c49809eC832e93502E3333dA">0x033f...333dA</option>
+                <option value="0xE35f033B28e9EfdA7788C74f5dF634fD0c937dC1">0xE35f...7dC1</option>
+                <option value="0xEC3AdD31D1Bc8017bA29B931d8B113313853642B">0xEC3A...642B</option>
+                <option value="0x4d6E4943DA76D5277ddd837c69746986cACeca94">0x4d6E...eca94</option>
+                <option value="0xEF077321579680eF4f79f43664544E468AFE8992">0xEF07...8992</option>
+                <option value="0xA9eB51fA119B3d5A362798a87F91449E918EAa85">0xA9eB...Aa85</option>
+                <option value="0xb190a0FD3B9CA85F749Cd8778516185791fae01f">0xb190...e01f</option>
+                <option value="0xD9De14b18b8181eD87B2B7812888cBe3555FE905">0xD9De...E905</option>
+                <option value="0x92DBc148C73590DcCe6684F43300eFB101249aD4">0x92DB...9aD4</option>
+                <option value="0xa6B00cd67b25644A2847791d8cd67c4FF2369Ec2">0xa6B0...9Ec2</option>
+                <option value="0xAcC899c35C5B3eEA73be625C1219832A0a65A34e">0xAcC8...A34e</option>
+                <option value="0x1A6CeC2495caB0c43aa007298126Ab289bd7D395">0x1A6C...D395</option>
+                <option value="0x9CAE83896Cd5C90cC9ab43F6394C9E0174700964">0x9CAE...0964</option>
+                <option value="0x386671345e39Fa3651d52595c48c0A4d696f7169">0x3866...7169</option>
+                <option value="0xc6e6142f13c1C482d2271307ed3adFBE1C6cA40D">0xc6e6...A40D</option>
+                <option value="0xFd94634faa0729207168Bcc9c987eaa7c68B876e">0xFd94...876e</option>
+                <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
+                <option value="0x2733f4870C97966ba1943b50eDD32c7a1916CBa9">0x2733...CBa9</option>
+                <option value="0x9a49c581bB4417CF5CBc3D427F185BDB6a067FE0">0x9a49...7FE0</option>
+                <option value="0x023D25C2DcA8EE5CF58eD5622B815A48C52627b1">0x023D...27b1</option>
+                <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
+                <option value="0x23D53739D0A01a585379E16711868a948efD1616">0x23D5...1616</option>
+
+                <option value="manual">Enter manually...</option>
+        </select>
+        <input type="text" id="manual-wallet" placeholder="Enter wallet address manually">
+        <button onclick="fetchData()">Update</button>
+    </div>
+    <table id="report-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Account Value</th>
+                <th>Perp Volume</th>
+                <th>PnL</th>
+                <th>Broker ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data rows will be inserted here dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        function toggleManualInput(value) {
+            const manualInput = document.getElementById('manual-wallet');
+            if (value === 'manual') {
+                manualInput.style.display = 'inline-block';
+                manualInput.focus();
+            } else {
+                manualInput.style.display = 'none';
+            }
+        }
+
+        async function fetchData() {
+            const wallet = document.getElementById('wallet').value === 'manual' ? 
+                           document.getElementById('manual-wallet').value : 
+                           document.getElementById('wallet').value;
+            const response = await fetch(`https://data.dbltecnologia.com.br/account_statistics_daily?account=${wallet}`);
+            const data = await response.json();
+
+            if (data.data && data.data.data && data.data.data.rows) {
+                updateTable(data.data.data.rows);
+            } else {
+                console.error("No data found.");
+            }
+        }
+
+        function updateTable(rows) {
+            const tableBody = document.getElementById('report-table').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';  // Clear existing rows
+
+            rows.forEach(row => {
+                const newRow = tableBody.insertRow();
+
+                const dateCell = newRow.insertCell(0);
+                dateCell.textContent = row.date;
+
+                const valueCell = newRow.insertCell(1);
+                valueCell.textContent = row.account_value;
+
+                const volumeCell = newRow.insertCell(2);
+                volumeCell.textContent = row.perp_volume;
+
+                const pnlCell = newRow.insertCell(3);
+                pnlCell.textContent = row.pnl;
+                if (parseFloat(row.pnl) >= 0) {
+                    pnlCell.classList.add('pnl-positive');
+                } else {
+                    pnlCell.classList.add('pnl-negative');
+                }
+
+                const brokerCell = newRow.insertCell(4);
+                brokerCell.textContent = row.broker_id;
+            });
+        }
+
+        // Fetch data when the page loads
+        fetchData();
+    </script>
+</body>
+</html>
