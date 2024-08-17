@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Statistics Daily Report</title>
+    <title>FUNL PNL & VOL Report</title>
     <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
     <style>
         body {
@@ -65,6 +65,10 @@
         .pnl-negative {
             color: #ff0000; /* Red for negative values */
         }
+        .totals-row {
+            font-weight: bold;
+            background-color: #444;
+        }
     </style>
 </head>
 <body>
@@ -75,30 +79,30 @@
     <div class="wallet">
         <label for="wallet">Wallet Address:</label>
         <select id="wallet" onchange="toggleManualInput(this.value)">
-                <option value="0x033f9983a14F6589c49809eC832e93502E3333dA">0x033f...333dA</option>
-                <option value="0xE35f033B28e9EfdA7788C74f5dF634fD0c937dC1">0xE35f...7dC1</option>
-                <option value="0xEC3AdD31D1Bc8017bA29B931d8B113313853642B">0xEC3A...642B</option>
-                <option value="0x4d6E4943DA76D5277ddd837c69746986cACeca94">0x4d6E...eca94</option>
-                <option value="0xEF077321579680eF4f79f43664544E468AFE8992">0xEF07...8992</option>
-                <option value="0xA9eB51fA119B3d5A362798a87F91449E918EAa85">0xA9eB...Aa85</option>
-                <option value="0xb190a0FD3B9CA85F749Cd8778516185791fae01f">0xb190...e01f</option>
-                <option value="0xD9De14b18b8181eD87B2B7812888cBe3555FE905">0xD9De...E905</option>
-                <option value="0x92DBc148C73590DcCe6684F43300eFB101249aD4">0x92DB...9aD4</option>
-                <option value="0xa6B00cd67b25644A2847791d8cd67c4FF2369Ec2">0xa6B0...9Ec2</option>
-                <option value="0xAcC899c35C5B3eEA73be625C1219832A0a65A34e">0xAcC8...A34e</option>
-                <option value="0x1A6CeC2495caB0c43aa007298126Ab289bd7D395">0x1A6C...D395</option>
-                <option value="0x9CAE83896Cd5C90cC9ab43F6394C9E0174700964">0x9CAE...0964</option>
-                <option value="0x386671345e39Fa3651d52595c48c0A4d696f7169">0x3866...7169</option>
-                <option value="0xc6e6142f13c1C482d2271307ed3adFBE1C6cA40D">0xc6e6...A40D</option>
-                <option value="0xFd94634faa0729207168Bcc9c987eaa7c68B876e">0xFd94...876e</option>
-                <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
-                <option value="0x2733f4870C97966ba1943b50eDD32c7a1916CBa9">0x2733...CBa9</option>
-                <option value="0x9a49c581bB4417CF5CBc3D427F185BDB6a067FE0">0x9a49...7FE0</option>
-                <option value="0x023D25C2DcA8EE5CF58eD5622B815A48C52627b1">0x023D...27b1</option>
-                <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
-                <option value="0x23D53739D0A01a585379E16711868a948efD1616">0x23D5...1616</option>
+            <option value="0x033f9983a14F6589c49809eC832e93502E3333dA">0x033f...333dA</option>
+            <option value="0xE35f033B28e9EfdA7788C74f5dF634fD0c937dC1">0xE35f...7dC1</option>
+            <option value="0xEC3AdD31D1Bc8017bA29B931d8B113313853642B">0xEC3A...642B</option>
+            <option value="0x4d6E4943DA76D5277ddd837c69746986cACeca94">0x4d6E...eca94</option>
+            <option value="0xEF077321579680eF4f79f43664544E468AFE8992">0xEF07...8992</option>
+            <option value="0xA9eB51fA119B3d5A362798a87F91449E918EAa85">0xA9eB...Aa85</option>
+            <option value="0xb190a0FD3B9CA85F749Cd8778516185791fae01f">0xb190...e01f</option>
+            <option value="0xD9De14b18b8181eD87B2B7812888cBe3555FE905">0xD9De...E905</option>
+            <option value="0x92DBc148C73590DcCe6684F43300eFB101249aD4">0x92DB...9aD4</option>
+            <option value="0xa6B00cd67b25644A2847791d8cd67c4FF2369Ec2">0xa6B0...9Ec2</option>
+            <option value="0xAcC899c35C5B3eEA73be625C1219832A0a65A34e">0xAcC8...A34e</option>
+            <option value="0x1A6CeC2495caB0c43aa007298126Ab289bd7D395">0x1A6C...D395</option>
+            <option value="0x9CAE83896Cd5C90cC9ab43F6394C9E0174700964">0x9CAE...0964</option>
+            <option value="0x386671345e39Fa3651d52595c48c0A4d696f7169">0x3866...7169</option>
+            <option value="0xc6e6142f13c1C482d2271307ed3adFBE1C6cA40D">0xc6e6...A40D</option>
+            <option value="0xFd94634faa0729207168Bcc9c987eaa7c68B876e">0xFd94...876e</option>
+            <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
+            <option value="0x2733f4870C97966ba1943b50eDD32c7a1916CBa9">0x2733...CBa9</option>
+            <option value="0x9a49c581bB4417CF5CBc3D427F185BDB6a067FE0">0x9a49...7FE0</option>
+            <option value="0x023D25C2DcA8EE5CF58eD5622B815A48C52627b1">0x023D...27b1</option>
+            <option value="0x128DF03D7F096bc84e12231B72024803688EC40F">0x128D...C40F</option>
+            <option value="0x23D53739D0A01a585379E16711868a948efD1616">0x23D5...1616</option>
 
-                <option value="manual">Enter manually...</option>
+            <option value="manual">Enter manually...</option>
         </select>
         <input type="text" id="manual-wallet" placeholder="Enter wallet address manually">
         <button onclick="fetchData()">Update</button>
@@ -116,6 +120,15 @@
         <tbody>
             <!-- Data rows will be inserted here dynamically -->
         </tbody>
+        <tfoot>
+            <tr class="totals-row">
+                <td>Total</td>
+                <td></td>
+                <td id="total-volume"></td>
+                <td id="total-pnl"></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
     <script>
@@ -145,6 +158,8 @@
 
         function updateTable(rows) {
             const tableBody = document.getElementById('report-table').getElementsByTagName('tbody')[0];
+            let totalPnL = 0;
+            let totalVolume = 0;
             tableBody.innerHTML = '';  // Clear existing rows
 
             rows.forEach(row => {
@@ -158,9 +173,11 @@
 
                 const volumeCell = newRow.insertCell(2);
                 volumeCell.textContent = row.perp_volume;
+                totalVolume += parseFloat(row.perp_volume);
 
                 const pnlCell = newRow.insertCell(3);
                 pnlCell.textContent = row.pnl;
+                totalPnL += parseFloat(row.pnl);
                 if (parseFloat(row.pnl) >= 0) {
                     pnlCell.classList.add('pnl-positive');
                 } else {
@@ -170,6 +187,18 @@
                 const brokerCell = newRow.insertCell(4);
                 brokerCell.textContent = row.broker_id;
             });
+
+            // Update total PnL and Volume
+            const totalPnLElement = document.getElementById('total-pnl');
+            totalPnLElement.textContent = totalPnL.toFixed(6);
+            if (totalPnL >= 0) {
+                totalPnLElement.classList.add('pnl-positive');
+            } else {
+                totalPnLElement.classList.add('pnl-negative');
+            }
+
+            const totalVolumeElement = document.getElementById('total-volume');
+            totalVolumeElement.textContent = totalVolume.toFixed(6);
         }
 
         // Fetch data when the page loads
