@@ -37,10 +37,10 @@
     .wallet {
       background-color: #2c2c2c;
       border: 1px solid #444;
-      padding: 20px;
-      border-radius: 10px;
+      padding: 10px;
+      border-radius: 5px;
       width: 100%;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       position: relative;
     }
     .wallet h3 {
@@ -57,25 +57,31 @@
       margin-top: 10px;
       border-radius: 5px;
     }
-    .wallet .expand-button, .wallet .collapse-button, .wallet .expand-pairs-button, .wallet .expand-details-button {
-      background-color: #ff9500;
-      border: none;
+    .wallet .expand-pairs-button, .wallet .expand-details-button {
+      background-color: #444;
+      border-radius: 15px;
       color: white;
       padding: 5px 10px;
       cursor: pointer;
-      border-radius: 5px;
-      width: auto;
-      align-self: flex-end;
-      margin-top: 10px;
+      border: 2px solid #666;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s, border 0.3s;
     }
-    .wallet .expanded, .wallet .pairs-expanded, .wallet .details-expanded {
+    .wallet .expand-pairs-button:hover, .wallet .expand-details-button:hover {
+      background-color: #555;
+    }
+    .wallet .pairs-expanded, .wallet .details-expanded {
       display: block;
     }
     .wallet .pairs {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 8px;
+        margin-bottom: 4px;
     }
     .wallet .pair {
       display: flex;
@@ -90,36 +96,56 @@
     }
     .wallet .slider {
       width: 60px;
-      height: 20px;
-      background-color: #ccc;
-      border-radius: 10px;
+      height: 30px;
+      background-color: #444;
+      border-radius: 20px;
       position: relative;
       cursor: pointer;
+      border: 2px solid #666;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5px;
+      transition: background-color 0.3s, border 0.3s;
+    }
+    .wallet .slider span {
+      font-weight: bold;
+      font-size: 14px;
+      color: #fff;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .wallet .slider span.off {
+      color: red;
+    }
+    .wallet .slider span.on {
+      color: green;
     }
     .wallet .slider::before {
       content: '';
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 30px;
+      height: 30px;
+      background-color: red;
       border-radius: 50%;
-      background-color: white;
-      top: 0;
       left: 0;
-      transition: 0.2s;
+      transition: transform 0.3s, background-color 0.3s;
     }
     .wallet .slider.on::before {
-      left: 40px;
+      transform: translateX(40px);
       background-color: green;
     }
-    .wallet .slider.off::before {
-      background-color: red;
+    .wallet .slider.on span.off {
+      visibility: hidden;
+    }
+    .wallet .slider.off span.on {
+      visibility: hidden;
     }
     .copy-button {
       background: none;
       border: none;
       color: #ff9500;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 16px;
     }
     .copy-button:hover {
       text-decoration: underline;
@@ -146,11 +172,11 @@
         <p>🔒 Working Capital: $<span id="wallet-1-collateral"></span> USDC</p>
         <p>🛢️ Gas: <span id="wallet-1-eth" class="gas-low"></span> ETH</p>
         <p>💰 Reserves: $0.00 USDC</p>
-        <button class="expand-pairs-button" onclick="togglePairs('wallet-1')">Expand Pairs</button>
+
         <div class="pairs expand-pairs" id="wallet-1-pairs">
           <!-- Pairs will be dynamically loaded here -->
         </div>
-        <button class="expand-details-button" onclick="toggleDetails('wallet-1')">Expand Details</button>
+       
         <div class="details" id="wallet-1-details">
           <!-- Additional details will be dynamically loaded here -->
         </div>
@@ -162,11 +188,11 @@
         <p>🔒 Working Capital: $<span id="wallet-2-collateral"></span> USDC</p>
         <p>🛢️ Gas: <span id="wallet-2-eth"></span> ETH</p>
         <p>💰 Reserves: $0.00 USDC</p>
-        <button class="expand-pairs-button" onclick="togglePairs('wallet-2')">Expand Pairs</button>
+       
         <div class="pairs expand-pairs" id="wallet-2-pairs">
           <!-- Pairs will be dynamically loaded here -->
         </div>
-        <button class="expand-details-button" onclick="toggleDetails('wallet-2')">Expand Details</button>
+   
         <div class="details" id="wallet-2-details">
           <!-- Additional details will be dynamically loaded here -->
         </div>
@@ -177,11 +203,11 @@
         <p>🔒 Working Capital: $<span id="wallet-3-collateral"></span> USDC</p>
         <p>🛢️ Gas: <span id="wallet-3-eth"></span> ETH</p>
         <p>💰 Reserves: $0.00 USDC</p>
-        <button class="expand-pairs-button" onclick="togglePairs('wallet-3')">Expand Pairs</button>
+       
         <div class="pairs expand-pairs" id="wallet-3-pairs">
           <!-- Pairs will be dynamically loaded here -->
         </div>
-        <button class="expand-details-button" onclick="toggleDetails('wallet-3')">Expand Details</button>
+   
         <div class="details" id="wallet-3-details">
           <!-- Additional details will be dynamically loaded here -->
         </div>
@@ -192,11 +218,11 @@
         <p>🔒 Working Capital: $<span id="wallet-4-collateral"></span> USDC</p>
         <p>🛢️ Gas: <span id="wallet-4-eth"></span> ETH</p>
         <p>💰 Reserves: $0.00 USDC</p>
-        <button class="expand-pairs-button" onclick="togglePairs('wallet-4')">Expand Pairs</button>
+       
         <div class="pairs expand-pairs" id="wallet-4-pairs">
           <!-- Pairs will be dynamically loaded here -->
         </div>
-        <button class="expand-details-button" onclick="toggleDetails('wallet-4')">Expand Details</button>
+  
         <div class="details" id="wallet-4-details">
           <!-- Additional details will be dynamically loaded here -->
         </div>
@@ -207,11 +233,11 @@
         <p>🔒 Working Capital: $<span id="wallet-5-collateral"></span> USDC</p>
         <p>🛢️ Gas: <span id="wallet-5-eth"></span> ETH</p>
         <p>💰 Reserves: $0.00 USDC</p>
-        <button class="expand-pairs-button" onclick="togglePairs('wallet-5')">Expand Pairs</button>
+       
         <div class="pairs expand-pairs" id="wallet-5-pairs">
           <!-- Pairs will be dynamically loaded here -->
         </div>
-        <button class="expand-details-button" onclick="toggleDetails('wallet-5')">Expand Details</button>
+      
         <div class="details" id="wallet-5-details">
           <!-- Additional details will be dynamically loaded here -->
         </div>
@@ -222,11 +248,11 @@
         <p>🔒 Working Capital: $<span id="wallet-6-collateral"></span> USDC</p>
         <p>🛢️ Gas: <span id="wallet-6-eth"></span> ETH</p>
         <p>💰 Reserves: $0.00 USDC</p>
-        <button class="expand-pairs-button" onclick="togglePairs('wallet-6')">Expand Pairs</button>
+
         <div class="pairs expand-pairs" id="wallet-6-pairs">
           <!-- Pairs will be dynamically loaded here -->
         </div>
-        <button class="expand-details-button" onclick="toggleDetails('wallet-6')">Expand Details</button>
+   
         <div class="details" id="wallet-6-details">
           <!-- Additional details will be dynamically loaded here -->
         </div>
@@ -262,14 +288,14 @@
     function togglePairs(walletId) {
       const pairs = document.getElementById(`${walletId}-pairs`);
       pairs.classList.toggle('pairs-expanded');
-      const button = pairs.previousElementSibling;
+      const button = document.querySelector(`#${walletId} .expand-pairs-button`);
       button.textContent = pairs.classList.contains('pairs-expanded') ? 'Collapse Pairs' : 'Expand Pairs';
     }
 
     function toggleDetails(walletId) {
       const details = document.getElementById(`${walletId}-details`);
       details.classList.toggle('details-expanded');
-      const button = details.previousElementSibling;
+      const button = document.querySelector(`#${walletId} .expand-details-button`);
       button.textContent = details.classList.contains('details-expanded') ? 'Collapse Details' : 'Expand Details';
     }
 
@@ -306,7 +332,10 @@
           pairElement.classList.add('pair');
           const pairStatus = Math.random() > 0.5 ? 'on' : 'off';  // Randomly setting pair status for illustration
           pairElement.innerHTML = `
-            <div class="slider ${pairStatus}" onclick="togglePair(this)"></div>
+            <div class="slider ${pairStatus}" onclick="togglePair(this)">
+              <span class="on">ON</span>
+              <span class="off">OFF</span>
+            </div>
             <span>${pair}</span>
           `;
           pairsContainer.appendChild(pairElement);
