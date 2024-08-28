@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FUNL.AI TESTNET Dashboard</title>
+  <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+  <style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #ffffff;
+    width: 100%;
+    border-bottom: 1px solid #ccc;
+  }
+  .header img {
+    height: 100px;
+    width: auto;
+  }
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+  }
+  table {
+    width: 80%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: #ffffff;
+  }
+  table, th, td {
+    border: 1px solid #ccc;
+  }
+  th, td {
+    padding: 10px;
+    text-align: center;
+  }
+  th {
+    background-color: #f8f8f8;
+    cursor: pointer;
+  }
+  .status-dot {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-active-buy {
+    background-color: green;
+  }
+  .status-active-sell {
+    background-color: red;
+  }
+  .closed-status {
+    color: orange;
+  }
+  .side-long {
+    color: green;
+  }
+  .side-short {
+    color: red;
+  }
+  .positive {
+    color: green;
+  }
+  .negative {
+    color: red;
+  }
+  .refresh-timer {
+    margin-top: 10px;
+    font-size: 18px;
+  }
+  .details {
+    display: none;
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+  }
+  .expand-button {
+    background-color: #E76238;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .expanded {
+    display: table-row;
+  }
+</style>
+
+</head>
+<body>
+  <div class="navbar">
+    <div class="logo">
+      <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
+    </div>
+  
+  </div>
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>Staging Log Dashboard</h1>
+      <div class="timer" id="refreshTimer">Refreshing in 60s</div>
+    </div>
+    <div class="filter-container">
+      <input type="text" id="filterInput" class="filter-input" placeholder="Filter logs by keyword...">
+      <select id="filterDropdown" class="filter-dropdown">
+        <option value="">All Logs</option>
+        <option value="log-info">Info</option>
+        <option value="log-warning">Warning</option>
+        <option value="log-error">Error</option>
+        <option value="log-success">Success</option>
+      </select>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Log Message</th>
+        </tr>
+      </thead>
+      <tbody id="logTableBody">
+        <!-- Logs will be dynamically inserted here -->
+        <tr class="log-info">
+          <td>2024-08-06 18:59:08</td>
+          <td>Agent Excalibur2 - Closing order for 0xb5a27cb8cb0401FdDaAe051027ffb7d650c4D5C6</td>
+        </tr>
+        <tr class="log-info">
+          <td>2024-08-06 18:59:07</td>
+          <td>Starting User Wallet Address: 0xEF077321579680eF4f79f43664544E468AFE8992</td>
+        </tr>
+        <tr class="log-success">
+          <td>2024-08-06 18:59:06</td>
+          <td>
+            Response: <div class="formatted-log">{ "success": true, "data": { "order_id": 3282030694, "client_order_id": null, "order_type": "MARKET", "order_price": null, "order_quantity": 0.00343, "order_amount": null }, "timestamp": 1722985145952 }</div>
+          </td>
+        </tr>
+        <tr class="log-info">
+          <td>2024-08-06 18:59:05</td>
+          <td>Symbol: PERP_BTC_USDC</td>
+        </tr>
+        <tr class="log-error">
+          <td>2024-08-06 18:59:04</td>
+          <td>Error: Failed to update balance for wallet 0xEF077321579680eF4f79f43664544E468AFE8992</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let refreshInterval = 60; // Refresh interval in seconds
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const refreshTimer = document.getElementById('refreshTimer');
+      const filterInput = document.getElementById('filterInput');
+      const filterDropdown = document.getElementById('filterDropdown');
+
+      // Fetch logs initially
+      fetchLogs();
+
+      // Set interval to refresh logs
+      setInterval(() => {
+        fetchLogs();
+        refreshInterval = 60; // Reset refresh interval
+      }, 60000);
+
+      // Countdown timer for refresh
+      setInterval(() => {
+        refreshInterval--;
+        refreshTimer.textContent = `Refreshing in ${refreshInterval}s`;
+      }, 1000);
+
+      // Add filter event listeners
+      filterInput.addEventListener('input', filterLogs);
+      filterDropdown.addEventListener('change', filterLogs);
+    });
+
+    async function fetchLogs() {
+      const logTableBody = document.getElementById('logTableBody');
+      try {
+        const response = await fetch('https://staging.dbltecnologia.com.br/logs');
+        const data = await response.json();
+        const logs = data.logs;
+
+        logTableBody.innerHTML = ''; // Clear existing logs
+
+        logs.forEach(log => {
+          const logEntry = document.createElement('tr');
+          const logParts = log.match(/^\[([^\]]+)\] (.+)$/);
+          const timestamp = logParts[1];
+          const message = logParts[2];
+          const formattedMessage = formatLogMessage(message);
+
+          logEntry.innerHTML = `
+            <td>${timestamp}</td>
+            <td>${formattedMessage}</td>
+          `;
+
+          // Apply color coding based on log message content
+          if (message.toLowerCase().includes('error')) {
+            logEntry.classList.add('log-error');
+          } else if (message.toLowerCase().includes('warning')) {
+            logEntry.classList.add('log-warning');
+          } else if (message.toLowerCase().includes('success')) {
+            logEntry.classList.add('log-success');
+          } else {
+            logEntry.classList.add('log-info');
+          }
+
+          logTableBody.appendChild(logEntry);
+        });
+
+        // Apply filter after fetching logs
+        filterLogs();
+
+      } catch (error) {
+        console.error('Error fetching logs:', error);
+      }
+    }
+
+    function formatLogMessage(message) {
+      try {
+        const jsonStart = message.indexOf("{");
+        const jsonEnd = message.lastIndexOf("}") + 1;
+        const jsonString = message.substring(jsonStart, jsonEnd);
+        const jsonObject = JSON.parse(jsonString);
+        const formattedJSON = JSON.stringify(jsonObject, null, 2);
+        const formattedMessage = `
+          ${message.substring(0, jsonStart)}
+          <div class="formatted-log">${formattedJSON}</div>
+          ${message.substring(jsonEnd)}
+        `;
+        return formattedMessage;
+      } catch (error) {
+        return message; // Return the original message if it's not a JSON string
+      }
+    }
+
+    function filterLogs() {
+      const filterInput = document.getElementById('filterInput').value.toLowerCase();
+      const filterDropdown = document.getElementById('filterDropdown').value;
+      const logEntries = document.getElementById('logTableBody').getElementsByTagName('tr');
+
+      for (let log of logEntries) {
+        const logMessage = log.getElementsByTagName('td')[1].innerText.toLowerCase();
+        const logClass = log.className;
+
+        if (logMessage.includes(filterInput) && (filterDropdown === '' || logClass === filterDropdown)) {
+          log.style.display = '';
+        } else {
+          log.style.display = 'none';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
