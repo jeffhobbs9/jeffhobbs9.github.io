@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <title>FUNL.AI Testnet Dashboard</title>
   <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+
+
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #1c1c1e;
-      color: #f5f5f7;
+      background-color: #f5f5f7;
+      color: #1c1c1e;
       margin: 0;
       padding: 0;
     }
@@ -17,7 +19,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 10px 20px;
-      background-color: #333;
+      background-color: #f1f1f1;
     }
     .logo img {
       height: 44px;
@@ -33,11 +35,11 @@
     }
     .dashboard-header h1 {
       font-size: 24px;
-      color: #fff;
+      color: #1c1c1e;
     }
     .timer {
-      background-color: #444;
-      color: #fff;
+      background-color: #e0e0e0;
+      color: #1c1c1e;
       padding: 5px 10px;
       border-radius: 5px;
       font-weight: bold;
@@ -52,29 +54,29 @@
       padding: 10px;
       font-size: 16px;
       border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #2c2c2e;
-      color: #f5f5f7;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      color: #1c1c1e;
     }
     .filter-dropdown {
       width: 20%;
       padding: 10px;
       font-size: 16px;
       border-radius: 5px;
-      border: 1px solid #444;
-      background-color: #2c2c2e;
-      color: #f5f5f7;
+      border: 1px solid #ccc;
+      background-color: #fff;
+      color: #1c1c1e;
     }
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
-      background-color: #333;
+      background-color: #f9f9f9;
       border-radius: 10px;
       overflow: hidden;
     }
     th, td {
-      border: 1px solid #444;
+      border: 1px solid #ddd;
       padding: 15px;
       text-align: left;
     }
@@ -86,10 +88,10 @@
       font-weight: 600;
     }
     tr:nth-child(even) {
-      background-color: #2c2c2e;
+      background-color: #f2f2f2;
     }
     tr:nth-child(odd) {
-      background-color: #1c1c1e;
+      background-color: #fff;
     }
     .log-info {
       color: #007aff;
@@ -107,14 +109,17 @@
       white-space: pre-wrap;
       font-family: "Courier New", Courier, monospace;
       font-size: 12px;
-      color: #f5f5f7;
-      background: #1c1c1e;
+      color: #1c1c1e;
+      background: #f5f5f7;
       padding: 10px;
       border-radius: 5px;
       margin-top: 10px;
-      border: 1px solid #444;
+      border: 1px solid #ccc;
     }
   </style>
+
+
+  
 </head>
 <body>
   <div class="navbar">
