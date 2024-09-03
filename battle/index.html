@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Coin Clash</title>
+    <style>
+        body {
+            background-color: #222;
+            color: #f1c40f;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+        }
+        .player-panel {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 45%;
+        }
+        h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        th {
+            background-color: #E76238;
+            color: #fff;
+        }
+        .button {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .button.accept {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .button.cancel {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .input-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .input-row input, .input-row select {
+            margin-right: 10px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        .input-row button {
+            padding: 8px 16px;
+            background-color: #f1c40f;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .input-row button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #f1c40f;">Meme Coin Clash</h1>
+    <div class="container">
+        <!-- Player 1 -->
+        <div class="player-panel">
+            <h2>MEW - Player 1 🐱</h2>
+            <div id="portfolioValueMEW">USDC Balance: Loading...</div>
+            <table id="positionsTableMEW">
+                <thead>
+                    <tr><th colspan="4">Live Positions</th></tr>
+                    <tr>
+                        <th>TRADE ID</th>
+                        <th>Position Size (QTY)</th>
+                        <th>Position Cost (USDC)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="5">Pending Bets</th></tr>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>Player</th>
+                        <th>Bet Amount (FUNL LP)</th>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingBetsTableMEW"></tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">Locked Bets</th></tr>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>Player 1 Bet</th>
+                        <th>Player 2 Bet</th>
+                        <th>Bet Amount (FUNL LP)</th>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="lockedBetsTableMEW"></tbody>
+            </table>
+
+            <div class="input-row">
+                <input type="number" id="mewBetAmount" placeholder="Bet Amount" min="1">
+                <select id="mewBetSelection">
+                    <option value="MEW">MEW</option>
+                    <option value="DOGE">DOGE</option>
+                </select>
+                <button class="button place-bet" onclick="placeBet('MEW')">Place Bet</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">Order History</th></tr>
+                    <tr>
+                        <th>ORDER ID</th>
+                        <th>Player</th>
+                        <th>Order Size</th>
+                        <th>Price</th>
+                        <th>PNL</th>
+                        <th>Date/Time (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody id="orderHistoryTableMEW"></tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">Bet History</th></tr>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>Player 1 Bet</th>
+                        <th>Player 2 Bet</th>
+                        <th>Bet Amount (FUNL LP)</th>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="betHistoryTableMEW"></tbody>
+            </table>
+        </div>
+
+        <!-- Player 2 -->
+        <div class="player-panel">
+            <h2>DOGE - Player 2 🐶</h2>
+            <div id="portfolioValueDOGE">USDC Balance: Loading...</div>
+            <table id="positionsTableDOGE">
+                <thead>
+                    <tr><th colspan="4">Live Positions</th></tr>
+                    <tr>
+                        <th>TRADE ID</th>
+                        <th>Position Size (QTY)</th>
+                        <th>Position Cost (USDC)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="5">Pending Bets</th></tr>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>Player</th>
+                        <th>Bet Amount (FUNL LP)</th>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingBetsTableDOGE"></tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">Locked Bets</th></tr>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>Player 1 Bet</th>
+                        <th>Player 2 Bet</th>
+                        <th>Bet Amount (FUNL LP)</th>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="lockedBetsTableDOGE"></tbody>
+            </table>
+
+            <div class="input-row">
+                <input type="number" id="dogeBetAmount" placeholder="Bet Amount" min="1">
+                <select id="dogeBetSelection">
+                    <option value="MEW">MEW</option>
+                    <option value="DOGE">DOGE</option>
+                </select>
+                <button class="button place-bet" onclick="placeBet('DOGE')">Place Bet</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">Order History</th></tr>
+                    <tr>
+                        <th>ORDER ID</th>
+                        <th>Player</th>
+                        <th>Order Size</th>
+                        <th>Price</th>
+                        <th>PNL</th>
+                        <th>Date/Time (UTC)</th>
+                    </tr>
+                </thead>
+                <tbody id="orderHistoryTableDOGE"></tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">Bet History</th></tr>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>Player 1 Bet</th>
+                        <th>Player 2 Bet</th>
+                        <th>Bet Amount (FUNL LP)</th>
+                        <th>Timestamp</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="betHistoryTableDOGE"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let mewBets = JSON.parse(localStorage.getItem('mewBets')) || [];
+        let dogeBets = JSON.parse(localStorage.getItem('dogeBets')) || [];
+        let mewBetHistory = JSON.parse(localStorage.getItem('mewBetHistory')) || [];
+        let dogeBetHistory = JSON.parse(localStorage.getItem('dogeBetHistory')) || [];
+
+        const accounts = {
+            MEW: "0x033f9983a14F6589c49809eC832e93502E3333dA",
+            DOGE: "0xE35f033B28e9EfdA7788C74f5dF634fD0c937dC1"
+        };
+
+        async function updatePortfolioAndPositions() {
+            try {
+                await Promise.all([
+                    fetchPositions("MEW", accounts.MEW),
+                    fetchPositions("DOGE", accounts.DOGE)
+                ]);
+                await Promise.all([
+                    fetchOrderHistory("MEW", accounts.MEW),
+                    fetchOrderHistory("DOGE", accounts.DOGE)
+                ]);
+            } catch (error) {
+                console.error("Error updating data:", error);
+            }
+        }
+
+        async function fetchPositions(player, account) {
+            try {
+                const response = await fetch(`https://orderly2.dbltecnologia.com.br/positions?account=${account}&symbol=PERP_${player}_USDC`);
+                const data = await response.json();
+
+                console.log("Positions for player:", player, data.data.data.rows);
+
+                const positions = data.data.data.rows;
+                const positionsTable = document.getElementById(`positionsTable${player}`);
+                const portfolioValueElement = document.getElementById(`portfolioValue${player}`);
+                let hasLivePosition = false;
+
+                positionsTable.innerHTML = '';
+
+                positions.forEach(position => {
+                    console.log(`Position details for ${player}: `, position);
+                    if (position.position_qty && position.position_qty != 0) {
+                        hasLivePosition = true;
+                        const row = positionsTable.insertRow();
+                        row.insertCell(0).innerText = position.symbol || '-';
+                        row.insertCell(1).innerText = position.position_qty || '-';
+                        row.insertCell(2).innerText = position.cost_position || '-';
+                        row.insertCell(3).innerText = 'Open';
+                    }
+                });
+
+                if (!hasLivePosition) {
+                    const row = positionsTable.insertRow();
+                    row.insertCell(0).innerText = '-';
+                    row.insertCell(1).innerText = '-';
+                    row.insertCell(2).innerText = '-';
+                    row.insertCell(3).innerText = 'No Open Positions';
+                }
+
+                portfolioValueElement.innerText = `USDC Balance: ${data.data.data.total_collateral_value || 'Loading...'}`;
+
+                toggleBetButton(player, !hasLivePosition);
+
+            } catch (error) {
+                console.error(`Error fetching ${player} positions:`, error);
+            }
+        }
+
+        async function fetchOrderHistory(player, account) {
+            try {
+                const response = await fetch(`https://orderly2.dbltecnologia.com.br/orders?account=${account}&symbol=PERP_${player}_USDC`);
+                const data = await response.json();
+                
+                const orders = data.data.data.rows.slice(0, 10);
+                
+                const orderHistoryTable = document.getElementById(`orderHistoryTable${player}`);
+                orderHistoryTable.innerHTML = '';
+
+                orders.forEach(order => {
+                    const row = orderHistoryTable.insertRow();
+                    const timestamp = order.created_time ? new Date(order.created_time) : null;
+                    const dateTimeUTC = timestamp ? timestamp.toISOString() : '-';
+
+                    row.insertCell(0).innerText = order.order_id || '-';
+                    row.insertCell(1).innerText = order.symbol || '-';
+                    row.insertCell(2).innerText = order.total_executed_quantity || '-';
+                    row.insertCell(3).innerText = order.average_executed_price || '-';
+                    row.insertCell(4).innerText = order.realized_pnl || '-';
+                    row.insertCell(5).innerText = dateTimeUTC;
+                });
+
+            } catch (error) {
+                console.error(`Error fetching ${player} order history:`, error);
+            }
+        }
+
+        function canPlaceBet(player) {
+            const positionsTable = player === 'MEW' ? document.getElementById('positionsTableMEW') : document.getElementById('positionsTableDOGE');
+            const rows = positionsTable.querySelectorAll('tbody tr');
+            for (let i = 0; i < rows.length; i++) {
+                const qtyCell = rows[i].cells[1].innerText.trim();
+                const qty = parseFloat(qtyCell);
+                if (qty !== 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function toggleBetButton(player) {
+            const positionsTable = document.getElementById(`positionsTable${player}`);
+            const rows = positionsTable.querySelectorAll('tbody tr');
+            let hasOpenPosition = false;
+
+            rows.forEach(row => {
+                const qtyCellText = row.cells[1].innerText.trim();
+                const qty = parseFloat(qtyCellText);
+                console.log(`Checking row for ${player} - QTY: ${qty}`); // Debugging line
+                if (!isNaN(qty) && qty !== 0) {
+                    hasOpenPosition = true;
+                }
+            });
+
+            const betButton = document.querySelector(`#${player.toLowerCase()}BetAmount`).nextElementSibling;
+            if (betButton) {
+                betButton.disabled = hasOpenPosition;
+            }
+
+            if (hasOpenPosition) {
+                alert("A live position is open. Close it before placing a new bet.");
+            }
+        }
+
+
+        updatePortfolioAndPositions().then(() => {
+            toggleBetButton('MEW');
+            toggleBetButton('DOGE');
+        });
+
+        function placeBet(player) {
+            console.log("placeBet triggered for player:", player);
+
+
+            const betAmount = player === 'MEW' ? document.getElementById('mewBetAmount').value : document.getElementById('dogeBetAmount').value;
+            const betSelection = player === 'MEW' ? document.getElementById('mewBetSelection').value : document.getElementById('dogeBetSelection').value;
+
+            if (betAmount > 0) {
+                const newBet = {
+                    id: Date.now(),
+                    player: betSelection,
+                    player1Bet: player === 'MEW' ? betSelection : '',
+                    player2Bet: player === 'DOGE' ? betSelection : '',
+                    betAmount: parseInt(betAmount),
+                    status: 'PENDING',
+                    timestamp: new Date().toISOString()
+                };
+                if (player === 'MEW') {
+                    mewBets.push(newBet);
+                } else {
+                    dogeBets.push(newBet);
+                }
+                updateBetTables('MEW');
+                updateBetTables('DOGE');
+            }
+        }
+
+        function updateBetTables(player) {
+            const pendingTableId = player === 'MEW' ? 'pendingBetsTableMEW' : 'pendingBetsTableDOGE';
+            const lockedTableId = player === 'MEW' ? 'lockedBetsTableMEW' : 'lockedBetsTableDOGE';
+            const pendingTable = document.getElementById(pendingTableId);
+            const lockedTable = document.getElementById(lockedTableId);
+
+            pendingTable.innerHTML = '';
+            lockedTable.innerHTML = '';
+
+            const playerBets = player === 'MEW' ? mewBets : dogeBets;
+            const otherPlayerBets = player === 'MEW' ? dogeBets : mewBets;
+
+            playerBets.forEach(bet => {
+                if (bet.status === 'PENDING') {
+                    const row = pendingTable.insertRow();
+                    row.insertCell(0).innerText = bet.id;
+                    row.insertCell(1).innerText = bet.player;
+                    row.insertCell(2).innerText = bet.betAmount;
+                    row.insertCell(3).innerText = bet.timestamp;
+                    const actionCell = row.insertCell(4);
+                    const cancelButton = document.createElement('button');
+                    cancelButton.innerText = 'Cancel';
+                    cancelButton.className = 'button cancel';
+                    cancelButton.onclick = () => cancelBet(bet.id, player);
+                    actionCell.appendChild(cancelButton);
+                }
+            });
+
+            otherPlayerBets.forEach(bet => {
+                if (bet.status === 'PENDING') {
+                    const row = pendingTable.insertRow();
+                    row.insertCell(0).innerText = bet.id;
+                    row.insertCell(1).innerText = bet.player;
+                    row.insertCell(2).innerText = bet.betAmount;
+                    row.insertCell(3).innerText = bet.timestamp;
+                    const actionCell = row.insertCell(4);
+                    const acceptButton = document.createElement('button');
+                    acceptButton.innerText = 'Accept';
+                    acceptButton.className = 'button accept';
+                    acceptButton.onclick = () => acceptBet(bet.id, player);
+                    actionCell.appendChild(acceptButton);
+                }
+            });
+
+            playerBets.concat(otherPlayerBets).forEach(bet => {
+                if (bet.status === 'LOCKED') {
+                    const row = lockedTable.insertRow();
+                    row.insertCell(0).innerText = bet.id;
+                    row.insertCell(1).innerText = bet.player1Bet;
+                    row.insertCell(2).innerText = bet.player2Bet;
+                    row.insertCell(3).innerText = bet.betAmount;
+                    row.insertCell(4).innerText = bet.timestamp;
+                    row.insertCell(5).innerText = bet.status;
+                }
+            });
+
+            localStorage.setItem('mewBets', JSON.stringify(mewBets));
+            localStorage.setItem('dogeBets', JSON.stringify(dogeBets));
+        }
+
+        function acceptBet(betId, player) {
+            const playerBets = player === 'MEW' ? dogeBets : mewBets;
+            const bet = playerBets.find(b => b.id === betId);
+            if (bet) {
+                bet.status = 'LOCKED';
+                if (player === 'MEW') {
+                    bet.player2Bet = 'DOGE';
+                } else {
+                    bet.player1Bet = 'MEW';
+                }
+                updateBetTables('MEW');
+                updateBetTables('DOGE');
+            }
+        }
+
+        function cancelBet(betId, player) {
+            const playerBets = player === 'MEW' ? mewBets : dogeBets;
+            const betIndex = playerBets.findIndex(b => b.id === betId);
+            if (betIndex >= 0) {
+                playerBets.splice(betIndex, 1);
+                updateBetTables('MEW');
+                updateBetTables('DOGE');
+            }
+        }
+
+        function moveLockedBetsToHistory(bets, player) {
+            const historyTableId = player === 'MEW' ? 'betHistoryTableMEW' : 'betHistoryTableDOGE';
+            const historyTable = document.getElementById(historyTableId);
+
+            bets.forEach(bet => {
+                if (bet.status === 'LOCKED') {
+                    bet.status = 'HISTORY';
+                    historyTable.innerHTML = '';
+
+                    const row = historyTable.insertRow();
+                    row.insertCell(0).innerText = bet.id;
+                    row.insertCell(1).innerText = bet.player1Bet;
+                    row.insertCell(2).innerText = bet.player2Bet;
+                    row.insertCell(3).innerText = bet.betAmount;
+                    row.insertCell(4).innerText = bet.timestamp;
+                    row.insertCell(5).innerText = bet.status;
+
+                    if (player === 'MEW') {
+                        mewBetHistory.push(bet);
+                    } else {
+                        dogeBetHistory.push(bet);
+                    }
+                }
+            });
+
+            localStorage.setItem('mewBetHistory', JSON.stringify(mewBetHistory));
+            localStorage.setItem('dogeBetHistory', JSON.stringify(dogeBetHistory));
+        }
+
+        // Initial data load
+        updatePortfolioAndPositions();
+
+        // Refresh data every 60 seconds
+        setInterval(updatePortfolioAndPositions, 60000);
+    </script>
+</body>
+</html>
