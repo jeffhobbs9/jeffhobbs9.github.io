@@ -290,6 +290,7 @@
                 const positionsTable = document.getElementById(`positionsTable${player}`);
                 const portfolioValueElement = document.getElementById(`portfolioValue${player}`);
                 let hasLivePosition = false;
+                let positionClosed = false;
 
                 positionsTable.innerHTML = '';
 
@@ -311,9 +312,15 @@
                     row.insertCell(1).innerText = '-';
                     row.insertCell(2).innerText = '-';
                     row.insertCell(3).innerText = 'No Open Positions';
+                    positionClosed = true;
                 }
 
                 portfolioValueElement.innerText = `USDC Balance: ${data.data.data.total_collateral_value || 'Loading...'}`;
+
+                // If position was closed, move locked bets to history
+                if (positionClosed) {
+                    moveLockedBetsToHistory(player === 'MEW' ? mewBets : dogeBets, player);
+                }
 
                 toggleBetButton(player, !hasLivePosition);
 
@@ -321,6 +328,52 @@
                 console.error(`Error fetching ${player} positions:`, error);
             }
         }
+
+        function moveLockedBetsToHistory(bets, player) {
+            const historyTableId = player === 'MEW' ? 'betHistoryTableMEW' : 'betHistoryTableDOGE';
+            const historyTable = document.getElementById(historyTableId);
+
+            bets.forEach(bet => {
+                if (bet.status === 'LOCKED') {
+                    bet.status = 'HISTORY';
+
+                    const row = historyTable.insertRow();
+                    row.insertCell(0).innerText = bet.id;
+                    row.insertCell(1).innerText = bet.player1Bet;
+                    row.insertCell(2).innerText = bet.player2Bet;
+                    row.insertCell(3).innerText = bet.betAmount;
+                    row.insertCell(4).innerText = bet.timestamp;
+                    row.insertCell(5).innerText = bet.status;
+
+                    if (player === 'MEW') {
+                        mewBetHistory.push(bet);
+                    } else {
+                        dogeBetHistory.push(bet);
+                    }
+                }
+            });
+
+            // Clear the locked bets from the main array
+            if (player === 'MEW') {
+                mewBets = mewBets.filter(bet => bet.status !== 'LOCKED');
+            } else {
+                dogeBets = dogeBets.filter(bet => bet.status !== 'LOCKED');
+            }
+
+            // Update the UI to reflect the changes
+            updateBetTables('MEW');
+            updateBetTables('DOGE');
+
+            localStorage.setItem('mewBetHistory', JSON.stringify(mewBetHistory));
+            localStorage.setItem('dogeBetHistory', JSON.stringify(dogeBetHistory));
+        }
+
+        // Initial data load
+        updatePortfolioAndPositions();
+
+        // Refresh data every 60 seconds
+        setInterval(updatePortfolioAndPositions, 60000);
+
 
         async function fetchOrderHistory(player, account) {
             try {
