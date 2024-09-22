@@ -95,6 +95,16 @@
         .expanded {
             display: table-row;
         }
+
+        .side-long {
+            color: green;
+        }
+        .side-short {
+            color: red;
+        }
+        .side-closed {
+            color: gray; /* or any other color you prefer for closed positions */
+        }
     </style>
 </head>
 
@@ -157,18 +167,16 @@
                 for (const position of walletData) {
                     const details = await fetchAdditionalDetails(position.wallet);
 
-                    const statusHTML = details.position_qty === 0
-                        ? '<span class="closed-status">X</span>'
-                        : `<span class="status-dot ${details.position_qty > 0 ? 'status-active-buy' : 'status-active-sell'}"></span>`;
-
+                    const statusSymbol = getStatusSymbol(details.position_qty);
+                    const sideText = getSideText(details.position_qty);
                     const positionRow = document.createElement('tr');
                     positionRow.innerHTML = `
             <td>${position.agent}</td>
             <td>${position.wallet}</td>
-            <td>${statusHTML}</td>
-            <td>${details.order_quantity}</td>
-            <td>${details.order_type}</td>
-            <td class="${details.side === 'BUY' ? 'side-long' : 'side-short'}">${details.side}</td>
+            <td>${statusSymbol}</td>
+            <td>${Math.abs(details.position_qty)}</td>
+            <td>Market</td>
+            <td class="${sideText === 'CLOSED' ? 'side-closed' : (details.position_qty >= 0 ? 'side-long' : 'side-short')}">${sideText}</td>
             <td>${position.symbol}</td>
             <td><button class="expand-button" data-wallet="${position.wallet}">Expand</button></td>
           `;
@@ -214,11 +222,25 @@
                     const data = await response.json();
 
                     if (data.data && data.data.data && data.data.data.rows.length > 0) {
-                        return data.data.data.rows[0];
+                        const details = data.data.data.rows[0];
+                        return {
+                            side: details.position_qty >= 0 ? 'BUY' : 'SELL',
+                            order_quantity: Math.abs(details.position_qty),
+                            order_type: 'Market', // or determine based on other data
+                            average_open_price: details.average_open_price,
+                            cost_position: details.cost_position,
+                            mark_price: details.mark_price,
+                            est_liq_price: details.est_liq_price,
+                            fee_24_h: details.fee_24_h,
+                            pnl_24_h: details.pnl_24_h,
+                            position_qty: details.position_qty,
+                            unsettled_pnl: details.unsettled_pnl
+                        };
                     }
                 } catch (error) {
                     console.error('Error fetching additional details:', error);
                 }
+                // Return default values if fetch fails or data is not available
                 return {
                     side: 'N/A',
                     order_quantity: 'N/A',
@@ -232,6 +254,16 @@
                     position_qty: 0,
                     unsettled_pnl: 'N/A'
                 };
+            }
+
+            function getStatusSymbol(positionQty) {
+                if (positionQty === 0) return '✖️'; // CLOSED
+                return positionQty > 0 ? '🟢' : '🔴'; // LONG or SHORT
+            }
+
+            function getSideText(positionQty) {
+                if (positionQty === 0) return 'CLOSED';
+                return positionQty > 0 ? 'BUY' : 'SELL';
             }
 
             setInterval(updateRefreshTimer, 1000);
