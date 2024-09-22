@@ -179,14 +179,18 @@
 
             async function fetchData() {
                 let totalCollateralSum = 0;
+                let totalRealizedPNLSum = 0;
 
-                // In your fetchData function:
                 const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
                 positionsTableBody.innerHTML = ''; // Clear existing rows
 
                 for (const position of walletData) {
                     const details = await fetchAdditionalDetails(position.wallet, position.symbol);
                     totalCollateralSum += details.total_collateral_value;
+                    
+                    // Calculate Total Realized PNL for this agent
+                    const agentRealizedPNL = details.orders.reduce((sum, order) => sum + order.realized_pnl, 0);
+                    totalRealizedPNLSum += agentRealizedPNL;
 
                     const statusSymbol = getStatusSymbol(details.position_qty);
                     const sideText = getSideText(details.position_qty);
@@ -264,9 +268,10 @@
                 // After the loop, add the summary row at the bottom
                 const summaryRow = document.createElement('tr');
                 summaryRow.innerHTML = `
-                    <td colspan="6" style="text-align: right;"><strong>Total Collateral:</strong></td>
+                    <td colspan="5" style="text-align: right;"><strong>Totals:</strong></td>
+                    <td><strong>Total Collateral:</strong></td>
                     <td><strong>$${totalCollateralSum.toFixed(2)}</strong></td>
-                    <td></td>
+                    <td><strong>PNL: $${totalRealizedPNLSum.toFixed(2)}</strong></td>
                 `;
                 summaryRow.style.backgroundColor = '#333'; // Darker background for summary row
                 summaryRow.style.color = '#fff'; // White text for summary row
