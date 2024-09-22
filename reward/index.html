@@ -177,13 +177,13 @@
                 .then(data => {
                     if (data.success) {
                         const chainDetails = data.data.chain_details.map(chain => `
-                        <p>Chain ID: ${chain.chain_id} - Pending USDC: ${chain.pending_usdc} - Available USDC: ${chain.available_usdc}</p>
+                        <p>🔗 Chain ID: ${chain.chain_id} - 🔒 Pending USDC: ${chain.pending_usdc} - 🔓 Available USDC: ${chain.available_usdc}</p>
                     `).join('');
 
                         document.getElementById('redeemableStaking').innerHTML = `
                         <h2>💸 Redeemable Staking:</h2>
                         <p>🏅 Redeeming Valor Amount: ${data.data.redeeming_valor_amount}</p>
-                        <div>🔗 ${chainDetails}</div>
+                        <div>${chainDetails}</div>
                     `;
                     } else {
                         alert('Failed to fetch redeemable staking');
