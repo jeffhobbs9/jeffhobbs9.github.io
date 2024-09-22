@@ -156,10 +156,10 @@
                 .then(data => {
                     if (data.success) {
                         document.getElementById('totalRewards').innerHTML = `
-                        <h2>Total Staking Balance:</h2>
-                        <p>Total Staked Balance: ${data.data.total_staked_balance}</p>
-                        <p>Total Staked Order: ${data.data.total_staked_order}</p>
-                        <p>Total Staked esORDER: ${data.data.total_staked_esorder}</p>
+                        <h2>💰 Total Staking Balance:</h2>
+                        <p>🏦 Total Staked Balance: ${data.data.total_staked_balance}</p>
+                        <p>📊 Total Staked Order: ${data.data.total_staked_order}</p>
+                        <p>🪙 Total Staked esORDER: ${data.data.total_staked_esorder}</p>
                     `;
                     } else {
                         alert('Failed to fetch staking balance');
