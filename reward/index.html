@@ -123,14 +123,14 @@
                         const currentEpoch = data.data.current;
                         const nextEpoch = data.data.next;
                         document.getElementById('epochDetails').innerHTML = `
-                        <h2>Current Epoch: ${currentEpoch.epoch_id}</h2>
-                        <p>Major Weightage: ${currentEpoch.major_weightage}</p>
-                        <p>Alts Weightage: ${currentEpoch.alts_weightage}</p>
-                        <p>Major Symbols: ${currentEpoch.major_symbols}</p><br>
-                        <h2>Next Epoch: ${nextEpoch.epoch_id}</h2>
-                        <p>Major Weightage: ${nextEpoch.major_weightage}</p>
-                        <p>Alts Weightage: ${nextEpoch.alts_weightage}</p>
-                        <p>Major Symbols: ${nextEpoch.major_symbols}</p>
+                        <h2>📅 Current Epoch: ${currentEpoch.epoch_id}</h2>
+                        <p>💪 Major Weightage: ${currentEpoch.major_weightage}</p>
+                        <p>💩 Alts Weightage: ${currentEpoch.alts_weightage}</p>
+                        <p>🔗 Major Symbols: ${currentEpoch.major_symbols}</p><br>
+                        <h2>⏭️ Next Epoch: ${nextEpoch.epoch_id}</h2>
+                        <p>💪 Major Weightage: ${nextEpoch.major_weightage}</p>
+                        <p>💩 Alts Weightage: ${nextEpoch.alts_weightage}</p>
+                        <p>🔗 Major Symbols: ${nextEpoch.major_symbols}</p>
                     `;
                     } else {
                         document.getElementById('epochDetails').innerHTML = `<h2>Failed to load epoch details</h2>`;
@@ -226,17 +226,17 @@
                     if (data.success) {
                         const historyData = data.data.rows[0].broker[0];
                         document.getElementById('accountRewardsHistory').innerHTML = `
-                        <h2>Account Rewards History:</h2>
-                        <p>Epoch ID: ${data.data.rows[0].epoch_id}</p>
-                        <p>Broker ID: ${historyData.broker_id}</p>
-                        <p>Wallet Epoch Avg Staked: ${historyData.wallet_epoch_avg_staked}</p>
-                        <p>Trader Score (Major): ${historyData.trader_score_major}</p>
-                        <p>Trader Score (Alts): ${historyData.trader_score_alts}</p>
-                        <p>Epoch Token: ${historyData.epoch_token}</p>
-                        <p>Reward Status: ${historyData.reward_status}</p>
-                        <p>Reward Major: ${historyData.r_major}</p>
-                        <p>Reward Alts: ${historyData.r_alts}</p>
-                        <p>Total Account Rewards: ${historyData.r_account}</p>
+                        <h2>🎖️ Account Rewards History:</h2>
+                        <p>🆔 Epoch ID: ${data.data.rows[0].epoch_id}</p>
+                        <p>💼 Broker ID: ${historyData.broker_id}</p>
+                        <p>🏦 Wallet Epoch Avg Staked: ${historyData.wallet_epoch_avg_staked}</p>
+                        <p>⚡ Trader Score (Major): ${historyData.trader_score_major}</p>
+                        <p>📈 Trader Score (Alts): ${historyData.trader_score_alts}</p>
+                        <p>🏅 Epoch Token: ${historyData.epoch_token}</p>
+                        <p>📊 Reward Status: ${historyData.reward_status}</p>
+                        <p>💰 Reward Major: ${historyData.r_major}</p>
+                        <p>💸 Reward Alts: ${historyData.r_alts}</p>
+                        <p>🎯 Total Account Rewards: ${historyData.r_account}</p>
                     `;
                     } else {
                         alert('Failed to fetch account rewards history');
