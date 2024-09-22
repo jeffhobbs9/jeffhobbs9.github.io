@@ -202,12 +202,12 @@
                     if (data.success) {
                         const rewardData = data.data;
                         document.getElementById('tradingRewards').innerHTML = `
-                        <h2>Trading Rewards Estimate:</h2>
-                        <p>Broker ID: ${rewardData.rows[0].broker_id}</p>
-                        <p>Estimated Trading Volume: ${rewardData.est_trading_volume}</p>
-                        <p>Estimated Average Stake: ${rewardData.est_avg_stake}</p>
-                        <p>Estimated Stake Boost: ${rewardData.est_stake_boost}</p>
-                        <p>Estimated Wallet Rewards: ${rewardData.est_r_wallet}</p>
+                            <h2>💼 Trading Rewards Estimate:</h2>
+                            <p>🆔 Broker ID: ${rewardData.rows[0].broker_id}</p>
+                            <p>📊 Estimated Trading Volume: ${rewardData.est_trading_volume}</p>
+                            <p>🏦 Estimated Average Stake: ${rewardData.est_avg_stake}</p>
+                            <p>📈 Estimated Stake Boost: ${rewardData.est_stake_boost}</p>
+                            <p>💰 Estimated Wallet Rewards: ${rewardData.est_r_wallet}</p>
                     `;
                     } else {
                         alert('Failed to fetch trading rewards estimate');
