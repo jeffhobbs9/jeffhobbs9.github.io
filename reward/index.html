@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 Reward Dashboard</title>
+    <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+    <style>
+        /* Provided styles */
+        body {
+            background-color: #181818;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #222;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .button {
+            background-color: #ff8c00;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ff8c00;
+        }
+
+        .result-block {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff8c00;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <h1>🎁 Reward Dashboard</h1>
+
+        <!-- Address Input -->
+        <input type="text" id="addressInput" class="input-field" placeholder="Paste your wallet address here..." />
+
+        <!-- Fetch Data Button -->
+        <button class="button" onclick="fetchRewards()">Fetch Rewards</button>
+
+        <!-- Results Section -->
+        <div class="result-block" id="totalRewards">
+            <h2>Total Staking Balance:</h2>
+            <p>Loading...</p>
+        </div>
+        <div class="result-block" id="redeemableStaking">
+            <h2>Redeemable Staking:</h2>
+            <p>Loading...</p>
+        </div>
+        <div class="result-block" id="tradingRewards">
+            <h2>Trading Rewards Estimate:</h2>
+            <p>Loading...</p>
+        </div>
+        <div class="result-block" id="accountRewardsHistory">
+            <h2>Account Rewards History:</h2>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <script>
+        function fetchRewards() {
+            const address = document.getElementById('addressInput').value;
+            if (!address) {
+                alert("Please enter a valid wallet address");
+                return;
+            }
+
+            // Fetch staking balance
+            const stakingUrl = `https://api-evm.orderly.org/v1/staking/balance?address=${address}`;
+            fetch(stakingUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('totalRewards').innerHTML = `
+                        <h2>Total Staking Balance:</h2>
+                        <p>Total Staked Balance: ${data.data.total_staked_balance}</p>
+                        <p>Total Staked Order: ${data.data.total_staked_order}</p>
+                        <p>Total Staked esORDER: ${data.data.total_staked_esorder}</p>
+                    `;
+                    } else {
+                        alert('Failed to fetch staking balance');
+                    }
+                })
+                .catch(error => {
+                    alert('Error fetching staking balance');
+                    console.error('Error:', error);
+                });
+
+            // Fetch redeemable staking
+            const redeemUrl = `https://api-evm.orderly.org/v1/staking/valor/redeem?address=${address}`;
+            fetch(redeemUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const chainDetails = data.data.chain_details.map(chain => `
+                        <p>Chain ID: ${chain.chain_id} - Pending USDC: ${chain.pending_usdc} - Available USDC: ${chain.available_usdc}</p>
+                    `).join('');
+
+                        document.getElementById('redeemableStaking').innerHTML = `
+                        <h2>Redeemable Staking:</h2>
+                        <p>Redeeming Valor Amount: ${data.data.redeeming_valor_amount}</p>
+                        <div>${chainDetails}</div>
+                    `;
+                    } else {
+                        alert('Failed to fetch redeemable staking');
+                    }
+                })
+                .catch(error => {
+                    alert('Error fetching redeemable staking');
+                    console.error('Error:', error);
+                });
+
+            // Fetch trading rewards estimate
+            const tradingRewardsUrl = `https://api-evm.orderly.org/v1/public/trading_rewards/current_epoch_estimate?address=${address}`;
+            fetch(tradingRewardsUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const rewardData = data.data;
+                        document.getElementById('tradingRewards').innerHTML = `
+                        <h2>Trading Rewards Estimate:</h2>
+                        <p>Broker ID: ${rewardData.rows[0].broker_id}</p>
+                        <p>Estimated Trading Volume: ${rewardData.est_trading_volume}</p>
+                        <p>Estimated Average Stake: ${rewardData.est_avg_stake}</p>
+                        <p>Estimated Stake Boost: ${rewardData.est_stake_boost}</p>
+                        <p>Estimated Wallet Rewards: ${rewardData.est_r_wallet}</p>
+                    `;
+                    } else {
+                        alert('Failed to fetch trading rewards estimate');
+                    }
+                })
+                .catch(error => {
+                    alert('Error fetching trading rewards estimate');
+                    console.error('Error:', error);
+                });
+
+            // Fetch account rewards history
+            const rewardsHistoryUrl = `https://api-evm.orderly.org/v1/public/trading_rewards/account_rewards_history?address=${address}`;
+            fetch(rewardsHistoryUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const historyData = data.data.rows[0].broker[0];
+                        document.getElementById('accountRewardsHistory').innerHTML = `
+                        <h2>Account Rewards History:</h2>
+                        <p>Epoch ID: ${data.data.rows[0].epoch_id}</p>
+                        <p>Broker ID: ${historyData.broker_id}</p>
+                        <p>Wallet Epoch Avg Staked: ${historyData.wallet_epoch_avg_staked}</p>
+                        <p>Trader Score (Major): ${historyData.trader_score_major}</p>
+                        <p>Trader Score (Alts): ${historyData.trader_score_alts}</p>
+                        <p>Epoch Token: ${historyData.epoch_token}</p>
+                        <p>Reward Status: ${historyData.reward_status}</p>
+                        <p>Reward Major: ${historyData.r_major}</p>
+                        <p>Reward Alts: ${historyData.r_alts}</p>
+                        <p>Total Account Rewards: ${historyData.r_account}</p>
+                    `;
+                    } else {
+                        alert('Failed to fetch account rewards history');
+                    }
+                })
+                .catch(error => {
+                    alert('Error fetching account rewards history');
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+
+</body>
+
+</html>
