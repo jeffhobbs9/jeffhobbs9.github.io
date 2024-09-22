@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUNL.AI</title>
+    <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+    <style>
+        body {
+            background-color: #181818;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #181818;
+            width: 100%;
+        }
+
+        .header img {
+            height: 60px;
+            width: auto;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #222;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .refresh-timer {
+            text-align: center;
+            color: #ff8c00;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        th {
+            background-color: #ff8c00;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        td {
+            background-color: #2a2a2a;
+            padding: 15px;
+        }
+
+        .status-dot {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .side-short {
+            color: #ff4d4d;
+        }
+
+        .expand-button {
+            background-color: #ff8c00;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .details {
+            display: none;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .expanded {
+            display: table-row;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
+    </div>
+    <div class="content">
+        <div class="refresh-timer" id="refresh-timer">Next refresh in: 2:30</div>
+        <table id="positionsTable">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Wallet Address</th>
+                    <th>Position Status</th>
+                    <th>Order Quantity</th>
+                    <th>Order Type</th>
+                    <th>Side</th>
+                    <th>Symbol</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const walletData = [
+                { agent: 'Daytona1', wallet: '0xE312914239D16f50638c2b8B379c8a650a5fcAA7', symbol: 'PERP_BTC_USDC' },
+                { agent: 'Daytona2', wallet: '0x7A91443E52E48b50FA44dC0B3Fa90bd7153eFE7a', symbol: 'PERP_SOL_USDC' },
+                { agent: 'Daytona3', wallet: '0x6dE4216D73D36837710b4a07C4C494D2A203477e', symbol: 'PERP_ETH_USDC' },
+                { agent: 'Daytona4', wallet: '0x0a5d04a7216CEC8b2b277587b75737B21AE81DC6', symbol: 'PERP_BRETT_USDC' },
+                { agent: 'Daytona5', wallet: '0x1627b7A8279C43dB3b49b2cf85bf05b4823CecDa', symbol: 'PERP_PEPE_USDC' },
+                { agent: 'Excalibur1', wallet: '0xd6D0d935378a2D65373B028c7E0b96B7563fBbC2', symbol: 'PERP_ETH_USDC' },
+                { agent: 'Excalibur2', wallet: '0xC72FB23670Db060e4906dD33C89A843F8034b884', symbol: 'PERP_BTC_USDC' }
+            ];
+
+            const refreshTimerElement = document.getElementById('refresh-timer');
+            const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
+            let refreshTime = 180;
+
+            function updateRefreshTimer() {
+                const minutes = Math.floor(refreshTime / 60);
+                const seconds = refreshTime % 60;
+                refreshTimerElement.innerText = `Next refresh in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (refreshTime > 0) {
+                    refreshTime--;
+                } else {
+                    refreshTime = 180;
+                    fetchData();
+                }
+            }
+
+            async function fetchData() {
+                positionsTableBody.innerHTML = '';
+
+                for (const position of walletData) {
+                    const details = await fetchAdditionalDetails(position.wallet);
+
+                    const statusHTML = details.position_qty === 0
+                        ? '<span class="closed-status">X</span>'
+                        : `<span class="status-dot ${details.position_qty > 0 ? 'status-active-buy' : 'status-active-sell'}"></span>`;
+
+                    const positionRow = document.createElement('tr');
+                    positionRow.innerHTML = `
+            <td>${position.agent}</td>
+            <td>${position.wallet}</td>
+            <td>${statusHTML}</td>
+            <td>${details.order_quantity}</td>
+            <td>${details.order_type}</td>
+            <td class="${details.side === 'BUY' ? 'side-long' : 'side-short'}">${details.side}</td>
+            <td>${position.symbol}</td>
+            <td><button class="expand-button" data-wallet="${position.wallet}">Expand</button></td>
+          `;
+
+                    positionsTableBody.appendChild(positionRow);
+
+                    const detailsRow = document.createElement('tr');
+                    detailsRow.classList.add('details');
+                    detailsRow.setAttribute('data-wallet', position.wallet);
+                    detailsRow.innerHTML = `
+            <td colspan="8">
+              <table>
+                <tr><td>Average Open Price:</td><td>${details.average_open_price}</td></tr>
+                <tr><td>Cost Position:</td><td>${details.cost_position}</td></tr>
+                <tr><td>Mark Price:</td><td>${details.mark_price}</td></tr>
+                <tr><td>Estimated Liquidation Price:</td><td>${details.est_liq_price}</td></tr>
+                <tr><td>Fee (24h):</td><td>${details.fee_24_h}</td></tr>
+                <tr><td>PnL (24h):</td><td class="${details.pnl_24_h >= 0 ? 'positive' : 'negative'}">${details.pnl_24_h}</td></tr>
+                <tr><td>Position Quantity:</td><td class="${details.position_qty >= 0 ? 'side-long' : 'side-short'}">${details.position_qty}</td></tr>
+                <tr><td>Symbol:</td><td>${position.symbol}</td></tr>
+                <tr><td>Unsettled PnL:</td><td class="${details.unsettled_pnl >= 0 ? 'positive' : 'negative'}">${details.unsettled_pnl}</td></tr>
+              </table>
+            </td>
+          `;
+                    positionsTableBody.appendChild(detailsRow);
+                }
+
+                document.querySelectorAll('.expand-button').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const wallet = this.getAttribute('data-wallet');
+                        const detailsRow = document.querySelector(`.details[data-wallet="${wallet}"]`);
+                        if (detailsRow) {
+                            detailsRow.classList.toggle('expanded');
+                            this.textContent = detailsRow.classList.contains('expanded') ? 'Collapse' : 'Expand';
+                        }
+                    });
+                });
+            }
+
+            async function fetchAdditionalDetails(wallet) {
+                try {
+                    const response = await fetch(`https://data.dbltecnologia.com.br/positions?account=${wallet}`);
+                    const data = await response.json();
+
+                    if (data.data && data.data.data && data.data.data.rows.length > 0) {
+                        return data.data.data.rows[0];
+                    }
+                } catch (error) {
+                    console.error('Error fetching additional details:', error);
+                }
+                return {
+                    side: 'N/A',
+                    order_quantity: 'N/A',
+                    order_type: 'N/A',
+                    average_open_price: 'N/A',
+                    cost_position: 'N/A',
+                    mark_price: 'N/A',
+                    est_liq_price: 'N/A',
+                    fee_24_h: 'N/A',
+                    pnl_24_h: 'N/A',
+                    position_qty: 0,
+                    unsettled_pnl: 'N/A'
+                };
+            }
+
+            setInterval(updateRefreshTimer, 1000);
+            fetchData();
+        });
+
+        function sortTable(n) {
+            const table = document.getElementById('positionsTable');
+            let switching = true;
+            let dir = 'asc';
+            let switchcount = 0;
+
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+
+                for (let i = 1; i < rows.length - 1; i++) {
+                    let shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName('TD')[n];
+                    const y = rows[i + 1].getElementsByTagName('TD')[n];
+
+                    if (dir === 'asc') {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir === 'desc') {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount === 0 && dir === 'asc') {
+                        dir = 'desc';
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
