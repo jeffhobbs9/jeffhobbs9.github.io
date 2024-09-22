@@ -121,9 +121,9 @@
                     <th>Wallet Address</th>
                     <th>Position Status</th>
                     <th>Order Quantity</th>
-                    <th>Order Type</th>
                     <th>Side</th>
                     <th>Symbol</th>
+                    <th>Total Collateral</th>
                     <th>Details</th>
                 </tr>
             </thead>
@@ -162,50 +162,66 @@
             }
 
             async function fetchData() {
-                positionsTableBody.innerHTML = '';
+                let totalCollateralSum = 0;
+
+                // In your fetchData function:
+                const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
+                positionsTableBody.innerHTML = ''; // Clear existing rows
 
                 for (const position of walletData) {
                     const details = await fetchAdditionalDetails(position.wallet);
+                    totalCollateralSum += details.total_collateral_value;
 
                     const statusSymbol = getStatusSymbol(details.position_qty);
                     const sideText = getSideText(details.position_qty);
+
                     const positionRow = document.createElement('tr');
                     positionRow.innerHTML = `
             <td>${position.agent}</td>
             <td>${position.wallet}</td>
             <td>${statusSymbol}</td>
             <td>${Math.abs(details.position_qty)}</td>
-            <td>Market</td>
             <td class="${sideText === 'CLOSED' ? 'side-closed' : (details.position_qty >= 0 ? 'side-long' : 'side-short')}">${sideText}</td>
             <td>${position.symbol}</td>
+            <td>$${details.total_collateral_value.toFixed(2)}</td>
             <td><button class="expand-button" data-wallet="${position.wallet}">Expand</button></td>
           `;
-
                     positionsTableBody.appendChild(positionRow);
 
+                    // Create details row
                     const detailsRow = document.createElement('tr');
-                    detailsRow.classList.add('details');
+                    detailsRow.className = 'details';
                     detailsRow.setAttribute('data-wallet', position.wallet);
                     detailsRow.innerHTML = `
             <td colspan="8">
-              <table>
-                <tr><td>Average Open Price:</td><td>${details.average_open_price}</td></tr>
-                <tr><td>Cost Position:</td><td>${details.cost_position}</td></tr>
-                <tr><td>Mark Price:</td><td>${details.mark_price}</td></tr>
-                <tr><td>Estimated Liquidation Price:</td><td>${details.est_liq_price}</td></tr>
-                <tr><td>Fee (24h):</td><td>${details.fee_24_h}</td></tr>
-                <tr><td>PnL (24h):</td><td class="${details.pnl_24_h >= 0 ? 'positive' : 'negative'}">${details.pnl_24_h}</td></tr>
-                <tr><td>Position Quantity:</td><td class="${details.position_qty >= 0 ? 'side-long' : 'side-short'}">${details.position_qty}</td></tr>
-                <tr><td>Symbol:</td><td>${position.symbol}</td></tr>
-                <tr><td>Unsettled PnL:</td><td class="${details.unsettled_pnl >= 0 ? 'positive' : 'negative'}">${details.unsettled_pnl}</td></tr>
-              </table>
+                <div>
+                    <p>Average Open Price: ${details.average_open_price}</p>
+                    <p>Cost Position: ${details.cost_position}</p>
+                    <p>Mark Price: ${details.mark_price}</p>
+                    <p>Estimated Liquidation Price: ${details.est_liq_price}</p>
+                    <p>Fee (24h): ${details.fee_24_h}</p>
+                    <p>PnL (24h): ${details.pnl_24_h}</p>
+                    <p>Unsettled PnL: ${details.unsettled_pnl}</p>
+                </div>
             </td>
           `;
                     positionsTableBody.appendChild(detailsRow);
                 }
 
+                // After the loop, add the summary row at the bottom
+                const summaryRow = document.createElement('tr');
+                summaryRow.innerHTML = `
+                    <td colspan="6" style="text-align: right;"><strong>Total Collateral:</strong></td>
+                    <td><strong>$${totalCollateralSum.toFixed(2)}</strong></td>
+                    <td></td>
+                `;
+                summaryRow.style.backgroundColor = '#333'; // Darker background for summary row
+                summaryRow.style.color = '#fff'; // White text for summary row
+                positionsTableBody.appendChild(summaryRow);
+
+                // Add event listeners to expand buttons
                 document.querySelectorAll('.expand-button').forEach(button => {
-                    button.addEventListener('click', function () {
+                    button.addEventListener('click', function() {
                         const wallet = this.getAttribute('data-wallet');
                         const detailsRow = document.querySelector(`.details[data-wallet="${wallet}"]`);
                         if (detailsRow) {
@@ -221,37 +237,34 @@
                     const response = await fetch(`https://data.dbltecnologia.com.br/positions?account=${wallet}`);
                     const data = await response.json();
 
-                    if (data.data && data.data.data && data.data.data.rows.length > 0) {
-                        const details = data.data.data.rows[0];
+                    if (data.data && data.data.data) {
+                        const details = data.data.data.rows[0] || {};
                         return {
-                            side: details.position_qty >= 0 ? 'BUY' : 'SELL',
-                            order_quantity: Math.abs(details.position_qty),
-                            order_type: 'Market', // or determine based on other data
-                            average_open_price: details.average_open_price,
-                            cost_position: details.cost_position,
-                            mark_price: details.mark_price,
-                            est_liq_price: details.est_liq_price,
-                            fee_24_h: details.fee_24_h,
-                            pnl_24_h: details.pnl_24_h,
-                            position_qty: details.position_qty,
-                            unsettled_pnl: details.unsettled_pnl
+                            position_qty: details.position_qty || 0,
+                            order_type: details.position_qty !== 0 ? 'MARKET' : 'CLOSED',
+                            total_collateral_value: data.data.data.total_collateral_value || 0,
+                            average_open_price: details.average_open_price || 'N/A',
+                            cost_position: details.cost_position || 'N/A',
+                            mark_price: details.mark_price || 'N/A',
+                            est_liq_price: details.est_liq_price || 'N/A',
+                            fee_24_h: details.fee_24_h || 'N/A',
+                            pnl_24_h: details.pnl_24_h || 'N/A',
+                            unsettled_pnl: details.unsettled_pnl || 'N/A'
                         };
                     }
                 } catch (error) {
                     console.error('Error fetching additional details:', error);
                 }
-                // Return default values if fetch fails or data is not available
                 return {
-                    side: 'N/A',
-                    order_quantity: 'N/A',
-                    order_type: 'N/A',
+                    position_qty: 0,
+                    order_type: 'CLOSED',
+                    total_collateral_value: 0,
                     average_open_price: 'N/A',
                     cost_position: 'N/A',
                     mark_price: 'N/A',
                     est_liq_price: 'N/A',
                     fee_24_h: 'N/A',
                     pnl_24_h: 'N/A',
-                    position_qty: 0,
                     unsettled_pnl: 'N/A'
                 };
             }
