@@ -190,6 +190,8 @@
                     <th>Symbol</th>
                     <th>Collateral</th>
                     <th>PNL</th>
+                    <th>Fees</th>
+                    <th>NET</th>
                     <th>Details</th>
                 </tr>
             </thead>
@@ -231,8 +233,8 @@
                     let totalCollateralSum = 0;
                     let totalPNLSum = 0;
                     let totalFeesSum = 0;
+                    let totalNetSum = 0;
 
-                    const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
                     positionsTableBody.innerHTML = '';
 
                     for (const position of walletData) {
@@ -240,24 +242,29 @@
                             const details = await fetchAdditionalDetails(position.wallet, position.symbol);
                             console.log('Fetched details for', position.agent, details);
 
-                            totalCollateralSum += details.total_collateral_value;
-                            
-                            // Calculate total realized PNL and fees from orders
-                            const totalRealizedPNL = details.orders.reduce((sum, order) => sum + order.realized_pnl, 0);
-                            const totalFees = details.orders.reduce((sum, order) => sum + parseFloat(order.total_fee), 0);
-                            totalPNLSum += totalRealizedPNL;
+                            const positionQty = parseFloat(details.position_qty) || 0;
+                            const collateral = parseFloat(details.total_collateral_value) || 0;
+                            const realizedPnl = parseFloat(details.total_realized_pnl) || 0;
+                            const totalFees = parseFloat(details.total_fees) || 0;
+                            const net = realizedPnl - totalFees;
+
+                            totalCollateralSum += collateral;
+                            totalPNLSum += realizedPnl;
                             totalFeesSum += totalFees;
+                            totalNetSum += net;
 
                             const positionRow = document.createElement('tr');
                             positionRow.innerHTML = `
                                 <td>${position.agent}</td>
                                 <td>${position.wallet.slice(0, 6)}...${position.wallet.slice(-4)}</td>
-                                <td class="status-dot">${getStatusSymbol(details.position_qty)}</td>
-                                <td>${Math.abs(details.position_qty).toFixed(4)}</td>
-                                <td class="${getSideClass(details.position_qty)}">${getSideText(details.position_qty)}</td>
+                                <td class="status-dot">${getStatusSymbol(positionQty)}</td>
+                                <td>${Math.abs(positionQty).toFixed(4)}</td>
+                                <td class="${getSideClass(positionQty)}">${getSideText(positionQty)}</td>
                                 <td>${position.symbol}</td>
-                                <td>$${details.total_collateral_value.toFixed(2)}</td>
-                                <td class="${totalRealizedPNL >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalRealizedPNL.toFixed(2)}</td>
+                                <td>$${collateral.toFixed(2)}</td>
+                                <td class="${realizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${realizedPnl.toFixed(2)}</td>
+                                <td class="fees-negative">$${totalFees.toFixed(2)}</td>
+                                <td class="${net >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${net.toFixed(2)}</td>
                                 <td><button class="expand-button" data-wallet="${position.wallet}" data-symbol="${position.symbol}">Expand</button></td>
                             `;
                             positionsTableBody.appendChild(positionRow);
@@ -266,62 +273,78 @@
                             const detailsRow = document.createElement('tr');
                             detailsRow.className = 'details';
                             detailsRow.setAttribute('data-wallet', position.wallet);
-
+                            detailsRow.style.display = 'none';
                             detailsRow.innerHTML = `
-                                <td colspan="9">
+                                <td colspan="11">
                                     <div class="details-grid">
                                         <div class="details-column">
-                                            <p>Average Open Price: ${details.average_open_price}</p>
-                                            <p>Mark Price: ${details.mark_price}</p>
-                                            <p>Fee (24h): <span class="fees-negative">${details.fee_24_h}</span></p>
-                                            <p>Unsettled PnL: <span class="${parseFloat(details.unsettled_pnl) >= 0 ? 'pnl-positive' : 'pnl-negative'}">${details.unsettled_pnl}</span></p>
+                                            <div>Average Open Price: ${details.average_open_price}</div>
+                                            <div>Cost Position: ${details.cost_position}</div>
+                                            <div>Mark Price: ${details.mark_price}</div>
+                                            <div>Estimated Liquidation Price: ${details.est_liq_price}</div>
                                         </div>
                                         <div class="details-column">
-                                            <p>Cost Position: ${details.cost_position}</p>
-                                            <p>Estimated Liquidation Price: ${details.est_liq_price}</p>
-                                            <p>PnL (24h): <span class="${parseFloat(details.pnl_24_h) >= 0 ? 'pnl-positive' : 'pnl-negative'}">${details.pnl_24_h}</span></p>
+                                            <div>Fee (24h): ${details.fee_24_h}</div>
+                                            <div>PnL (24h): ${details.pnl_24_h}</div>
+                                            <div>Unsettled PnL: ${details.unsettled_pnl}</div>
                                         </div>
-                                        <div class="order-summary">
-                                            <h4>Order Summary:</h4>
-                                            <p>Total Realized PNL: <span class="${totalRealizedPNL >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalRealizedPNL.toFixed(2)}</span></p>
-                                            <p>Total Fees: <span class="fees-negative">$${totalFees.toFixed(2)}</span></p>
-                                        </div>
-                                        <table class="orders-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Order ID</th>
-                                                    <th>Type</th>
-                                                    <th>Side</th>
-                                                    <th>Quantity</th>
-                                                    <th>Avg. Price</th>
-                                                    <th>Status</th>
-                                                    <th>Realized PNL</th>
-                                                    <th>Total Fee</th>
-                                                    <th>Created Time</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                ${details.orders.map(order => `
-                                                    <tr>
-                                                        <td>${order.order_id}</td>
-                                                        <td>${order.type}</td>
-                                                        <td class="${order.side.toLowerCase() === 'buy' ? 'side-buy' : 'side-sell'}">${order.side}</td>
-                                                        <td>${order.quantity}</td>
-                                                        <td>${order.average_executed_price}</td>
-                                                        <td>${order.status}</td>
-                                                        <td class="${order.realized_pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${order.realized_pnl.toFixed(6)}</td>
-                                                        <td class="fees-negative">${order.total_fee}</td>
-                                                        <td>${new Date(order.created_time).toLocaleString()}</td>
-                                                    </tr>
-                                                `).join('')}
-                                            </tbody>
-                                        </table>
                                     </div>
+                                    <div class="order-summary">
+                                        <h4>Order Summary:</h4>
+                                        <p>Total Realized PNL: <span class="${realizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${realizedPnl.toFixed(2)}</span></p>
+                                        <p>Total Fees: <span class="fees-negative">$${totalFees.toFixed(2)}</span></p>
+                                    </div>
+                                    <table class="orders-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Type</th>
+                                                <th>Side</th>
+                                                <th>Quantity</th>
+                                                <th>Avg. Price</th>
+                                                <th>Status</th>
+                                                <th>Realized PNL</th>
+                                                <th>Total Fee</th>
+                                                <th>Created Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${details.orders.map(order => `
+                                                <tr>
+                                                    <td>${order.order_id}</td>
+                                                    <td>${order.type}</td>
+                                                    <td class="${order.side.toLowerCase() === 'buy' ? 'side-buy' : 'side-sell'}">${order.side}</td>
+                                                    <td>${order.quantity}</td>
+                                                    <td>${order.average_executed_price}</td>
+                                                    <td>${order.status}</td>
+                                                    <td class="${order.realized_pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${order.realized_pnl.toFixed(6)}</td>
+                                                    <td class="fees-negative">${order.total_fee}</td>
+                                                    <td>${new Date(order.created_time).toLocaleString()}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
                                 </td>
                             `;
                             positionsTableBody.appendChild(detailsRow);
                         } catch (error) {
                             console.error('Error processing position:', position.agent, error);
+                            // Display position with default values if there's an error
+                            const positionRow = document.createElement('tr');
+                            positionRow.innerHTML = `
+                                <td>${position.agent}</td>
+                                <td>${position.wallet.slice(0, 6)}...${position.wallet.slice(-4)}</td>
+                                <td><span class="status-dot status-closed">✖</span></td>
+                                <td>0.0000</td>
+                                <td class="side-closed">CLOSED</td>
+                                <td>${position.symbol}</td>
+                                <td>$0.00</td>
+                                <td>$0.00</td>
+                                <td>$0.00</td>
+                                <td>$0.00</td>
+                                <td><button class="expand-button" data-wallet="${position.wallet}" data-symbol="${position.symbol}">Expand</button></td>
+                            `;
+                            positionsTableBody.appendChild(positionRow);
                         }
                     }
 
@@ -329,11 +352,12 @@
                     const summaryRow = document.createElement('tr');
                     summaryRow.className = 'summary-row';
                     summaryRow.innerHTML = `
-                        <td colspan="5" style="text-align: right;"><strong>Totals:</strong></td>
-                        <td><strong>Collateral:</strong></td>
+                        <td colspan="6" style="text-align: right;"><strong>Totals:</strong></td>
                         <td><strong>$${totalCollateralSum.toFixed(2)}</strong></td>
-                        <td><strong>PNL: <span class="${totalPNLSum >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalPNLSum.toFixed(2)}</span></strong></td>
-                        <td><strong>Fees: <span class="fees-negative">$${totalFeesSum.toFixed(2)}</span></strong></td>
+                        <td><strong class="${totalPNLSum >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalPNLSum.toFixed(2)}</strong></td>
+                        <td><strong class="fees-negative">$${totalFeesSum.toFixed(2)}</strong></td>
+                        <td><strong class="${totalNetSum >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalNetSum.toFixed(2)}</strong></td>
+                        <td></td>
                     `;
                     positionsTableBody.appendChild(summaryRow);
 
@@ -343,8 +367,8 @@
                             const wallet = this.getAttribute('data-wallet');
                             const detailsRow = document.querySelector(`.details[data-wallet="${wallet}"]`);
                             if (detailsRow) {
-                                detailsRow.classList.toggle('expanded');
-                                this.textContent = detailsRow.classList.contains('expanded') ? 'Collapse' : 'Expand';
+                                detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+                                this.textContent = detailsRow.style.display === 'none' ? 'Expand' : 'Collapse';
                             }
                         });
                     });
@@ -363,15 +387,22 @@
                     console.log('Position data:', positionData);
                     console.log('Order data:', orderData);
 
+                    let details = {};
                     let totalCollateral = 0;
+                    let totalFees = 0;
+                    let totalRealizedPNL = 0;
+
                     if (positionData.data && positionData.data.data) {
                         totalCollateral = positionData.data.data.total_collateral_value || 0;
+                        if (positionData.data.data.rows && positionData.data.data.rows.length > 0) {
+                            details = positionData.data.data.rows[0];
+                        }
                     }
 
-                    const details = positionData.data && positionData.data.data && positionData.data.data.rows.length > 0 
-                        ? positionData.data.data.rows[0] 
-                        : {};
-                    const orders = orderData.data && orderData.data.data ? orderData.data.data.rows : [];
+                    if (orderData.data && orderData.data.data && orderData.data.data.rows) {
+                        totalFees = orderData.data.data.rows.reduce((sum, order) => sum + parseFloat(order.total_fee || 0), 0);
+                        totalRealizedPNL = orderData.data.data.rows.reduce((sum, order) => sum + parseFloat(order.realized_pnl || 0), 0);
+                    }
 
                     return {
                         position_qty: details.position_qty || 0,
@@ -383,18 +414,9 @@
                         fee_24_h: details.fee_24_h || 'N/A',
                         pnl_24_h: details.pnl_24_h || 'N/A',
                         unsettled_pnl: details.unsettled_pnl || 'N/A',
-                        pnl: details.pnl || 0,
-                        orders: orders.map(order => ({
-                            order_id: order.order_id,
-                            type: order.type,
-                            side: order.side,
-                            quantity: order.quantity,
-                            average_executed_price: order.average_executed_price,
-                            status: order.status,
-                            realized_pnl: order.realized_pnl || 0,
-                            total_fee: order.total_fee,
-                            created_time: order.created_time
-                        }))
+                        total_realized_pnl: totalRealizedPNL,
+                        total_fees: totalFees,
+                        orders: orderData.data && orderData.data.data ? orderData.data.data.rows : []
                     };
                 } catch (error) {
                     console.error('Error fetching additional details:', error);
