@@ -72,6 +72,14 @@
             color: #ff4d4d;
         }
 
+        .side-long {
+            color: #4caf50;
+        }
+
+        .side-closed {
+            color: #888;
+        }
+
         .expand-button {
             background-color: #ff8c00;
             border: none;
@@ -96,16 +104,6 @@
             display: table-row;
         }
 
-        .side-long {
-            color: green;
-        }
-        .side-short {
-            color: red;
-        }
-        .side-closed {
-            color: gray; /* or any other color you prefer for closed positions */
-        }
-
         .orders-table {
             width: 100%;
             border-collapse: collapse;
@@ -121,6 +119,45 @@
         .orders-table th {
             background-color: #333;
         }
+
+        .summary-row {
+            background-color: #333 !important;
+            color: #fff !important;
+            font-weight: bold;
+        }
+
+        .summary-row td {
+            border-top: 2px solid #ff8c00;
+        }
+
+        .pnl-positive {
+            color: #4caf50;
+        }
+
+        .pnl-negative {
+            color: #ff4d4d;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .details-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-summary {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+
+        .orders-table {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
     </style>
 </head>
 
@@ -134,12 +171,13 @@
             <thead>
                 <tr>
                     <th>Agent</th>
-                    <th>Wallet Address</th>
-                    <th>Position Status</th>
-                    <th>Order Quantity</th>
+                    <th>Wallet</th>
+                    <th>Status</th>
+                    <th>Quantity</th>
                     <th>Side</th>
                     <th>Symbol</th>
-                    <th>Total Collateral</th>
+                    <th>Collateral</th>
+                    <th>PNL</th>
                     <th>Details</th>
                 </tr>
             </thead>
@@ -178,116 +216,129 @@
             }
 
             async function fetchData() {
-                let totalCollateralSum = 0;
-                let totalRealizedPNLSum = 0;
+                try {
+                    let totalCollateralSum = 0;
+                    let totalPNLSum = 0;
 
-                const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
-                positionsTableBody.innerHTML = ''; // Clear existing rows
+                    const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
+                    positionsTableBody.innerHTML = '';
 
-                for (const position of walletData) {
-                    const details = await fetchAdditionalDetails(position.wallet, position.symbol);
-                    totalCollateralSum += details.total_collateral_value;
-                    
-                    // Calculate Total Realized PNL for this agent
-                    const agentRealizedPNL = details.orders.reduce((sum, order) => sum + order.realized_pnl, 0);
-                    totalRealizedPNLSum += agentRealizedPNL;
+                    for (const position of walletData) {
+                        try {
+                            const details = await fetchAdditionalDetails(position.wallet, position.symbol);
+                            console.log('Fetched details for', position.agent, details);
 
-                    const statusSymbol = getStatusSymbol(details.position_qty);
-                    const sideText = getSideText(details.position_qty);
+                            totalCollateralSum += details.total_collateral_value;
+                            
+                            // Calculate total realized PNL from orders
+                            const totalRealizedPNL = details.orders.reduce((sum, order) => sum + order.realized_pnl, 0);
+                            totalPNLSum += totalRealizedPNL;
 
-                    const positionRow = document.createElement('tr');
-                    positionRow.innerHTML = `
-            <td>${position.agent}</td>
-            <td>${position.wallet}</td>
-            <td>${statusSymbol}</td>
-            <td>${Math.abs(details.position_qty)}</td>
-            <td class="${sideText === 'CLOSED' ? 'side-closed' : (details.position_qty >= 0 ? 'side-long' : 'side-short')}">${sideText}</td>
-            <td>${position.symbol}</td>
-            <td>$${details.total_collateral_value.toFixed(2)}</td>
-            <td><button class="expand-button" data-wallet="${position.wallet}">Expand</button></td>
-          `;
-                    positionsTableBody.appendChild(positionRow);
+                            const positionRow = document.createElement('tr');
+                            positionRow.innerHTML = `
+                                <td>${position.agent}</td>
+                                <td>${position.wallet.slice(0, 6)}...${position.wallet.slice(-4)}</td>
+                                <td class="status-dot">${getStatusSymbol(details.position_qty)}</td>
+                                <td>${Math.abs(details.position_qty).toFixed(4)}</td>
+                                <td class="${getSideClass(details.position_qty)}">${getSideText(details.position_qty)}</td>
+                                <td>${position.symbol}</td>
+                                <td>$${details.total_collateral_value.toFixed(2)}</td>
+                                <td class="${totalRealizedPNL >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalRealizedPNL.toFixed(2)}</td>
+                                <td><button class="expand-button" data-wallet="${position.wallet}" data-symbol="${position.symbol}">Expand</button></td>
+                            `;
+                            positionsTableBody.appendChild(positionRow);
 
-                    // Create details row
-                    const detailsRow = document.createElement('tr');
-                    detailsRow.className = 'details';
-                    detailsRow.setAttribute('data-wallet', position.wallet);
+                            // Create details row
+                            const detailsRow = document.createElement('tr');
+                            detailsRow.className = 'details';
+                            detailsRow.setAttribute('data-wallet', position.wallet);
 
-                    const summary = calculateSummary(details.orders);
+                            // Calculate total fees
+                            const totalFees = details.orders.reduce((sum, order) => sum + parseFloat(order.total_fee), 0);
 
-                    detailsRow.innerHTML = `
-            <td colspan="8">
-                <div>
-                    <p>Average Open Price: ${details.average_open_price}</p>
-                    <p>Cost Position: ${details.cost_position}</p>
-                    <p>Mark Price: ${details.mark_price}</p>
-                    <p>Estimated Liquidation Price: ${details.est_liq_price}</p>
-                    <p>Fee (24h): ${details.fee_24_h}</p>
-                    <p>PnL (24h): ${details.pnl_24_h}</p>
-                    <p>Unsettled PnL: ${details.unsettled_pnl}</p>
-                    <h4>Order Summary:</h4>
-                    <p>Total Realized PNL: ${summary.totalRealizedPNL.toFixed(6)}</p>
-                    <p>Total Fees: ${summary.totalFees.toFixed(6)}</p>
-                    <h4>Recent Orders:</h4>
-                    <table class="orders-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Type</th>
-                                <th>Side</th>
-                                <th>Quantity</th>
-                                <th>Avg. Price</th>
-                                <th>Status</th>
-                                <th>Realized PNL</th>
-                                <th>Total Fee</th>
-                                <th>Created Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${details.orders.map(order => `
-                                <tr>
-                                    <td>${order.order_id}</td>
-                                    <td>${order.type}</td>
-                                    <td>${order.side}</td>
-                                    <td>${order.quantity}</td>
-                                    <td>${order.average_executed_price}</td>
-                                    <td>${order.status}</td>
-                                    <td>${order.realized_pnl.toFixed(6)}</td>
-                                    <td>${order.total_fee.toFixed(6)}</td>
-                                    <td>${new Date(order.created_time).toLocaleString()}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </td>
-          `;
-                    positionsTableBody.appendChild(detailsRow);
-                }
-
-                // After the loop, add the summary row at the bottom
-                const summaryRow = document.createElement('tr');
-                summaryRow.innerHTML = `
-                    <td colspan="5" style="text-align: right;"><strong>Totals:</strong></td>
-                    <td><strong>Total Collateral:</strong></td>
-                    <td><strong>$${totalCollateralSum.toFixed(2)}</strong></td>
-                    <td><strong>PNL: $${totalRealizedPNLSum.toFixed(2)}</strong></td>
-                `;
-                summaryRow.style.backgroundColor = '#333'; // Darker background for summary row
-                summaryRow.style.color = '#fff'; // White text for summary row
-                positionsTableBody.appendChild(summaryRow);
-
-                // Add event listeners to expand buttons
-                document.querySelectorAll('.expand-button').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const wallet = this.getAttribute('data-wallet');
-                        const detailsRow = document.querySelector(`.details[data-wallet="${wallet}"]`);
-                        if (detailsRow) {
-                            detailsRow.classList.toggle('expanded');
-                            this.textContent = detailsRow.classList.contains('expanded') ? 'Collapse' : 'Expand';
+                            detailsRow.innerHTML = `
+                                <td colspan="9">
+                                    <div class="details-grid">
+                                        <div class="details-column">
+                                            <p>Average Open Price: ${details.average_open_price}</p>
+                                            <p>Mark Price: ${details.mark_price}</p>
+                                            <p>Fee (24h): ${details.fee_24_h}</p>
+                                            <p>Unsettled PnL: ${details.unsettled_pnl}</p>
+                                        </div>
+                                        <div class="details-column">
+                                            <p>Cost Position: ${details.cost_position}</p>
+                                            <p>Estimated Liquidation Price: ${details.est_liq_price}</p>
+                                            <p>PnL (24h): ${details.pnl_24_h}</p>
+                                        </div>
+                                        <div class="order-summary">
+                                            <h4>Order Summary:</h4>
+                                            <p>Total Realized PNL: $${totalRealizedPNL.toFixed(6)}</p>
+                                            <p>Total Fees: $${totalFees.toFixed(6)}</p>
+                                        </div>
+                                        <table class="orders-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Type</th>
+                                                    <th>Side</th>
+                                                    <th>Quantity</th>
+                                                    <th>Avg. Price</th>
+                                                    <th>Status</th>
+                                                    <th>Realized PNL</th>
+                                                    <th>Total Fee</th>
+                                                    <th>Created Time</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${details.orders.map(order => `
+                                                    <tr>
+                                                        <td>${order.order_id}</td>
+                                                        <td>${order.type}</td>
+                                                        <td>${order.side}</td>
+                                                        <td>${order.quantity}</td>
+                                                        <td>${order.average_executed_price}</td>
+                                                        <td>${order.status}</td>
+                                                        <td>${order.realized_pnl.toFixed(6)}</td>
+                                                        <td>${order.total_fee}</td>
+                                                        <td>${new Date(order.created_time).toLocaleString()}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            `;
+                            positionsTableBody.appendChild(detailsRow);
+                        } catch (error) {
+                            console.error('Error processing position:', position.agent, error);
                         }
+                    }
+
+                    // Update the summary row
+                    const summaryRow = document.createElement('tr');
+                    summaryRow.className = 'summary-row';
+                    summaryRow.innerHTML = `
+                        <td colspan="6" style="text-align: right;"><strong>Totals:</strong></td>
+                        <td><strong>$${totalCollateralSum.toFixed(2)}</strong></td>
+                        <td><strong>$${totalPNLSum.toFixed(2)}</strong></td>
+                        <td></td>
+                    `;
+                    positionsTableBody.appendChild(summaryRow);
+
+                    // Add event listeners to expand buttons
+                    document.querySelectorAll('.expand-button').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const wallet = this.getAttribute('data-wallet');
+                            const detailsRow = document.querySelector(`.details[data-wallet="${wallet}"]`);
+                            if (detailsRow) {
+                                detailsRow.classList.toggle('expanded');
+                                this.textContent = detailsRow.classList.contains('expanded') ? 'Collapse' : 'Expand';
+                            }
+                        });
                     });
-                });
+                } catch (error) {
+                    console.error('Error in fetchData:', error);
+                }
             }
 
             async function fetchAdditionalDetails(wallet, symbol) {
@@ -296,6 +347,9 @@
                     const orderResponse = await fetch(`https://data.dbltecnologia.com.br/orders?account=${wallet}&symbol=${symbol}`);
                     const positionData = await positionResponse.json();
                     const orderData = await orderResponse.json();
+
+                    console.log('Position data:', positionData);
+                    console.log('Order data:', orderData);
 
                     let totalCollateral = 0;
                     if (positionData.data && positionData.data.data) {
@@ -317,6 +371,7 @@
                         fee_24_h: details.fee_24_h || 'N/A',
                         pnl_24_h: details.pnl_24_h || 'N/A',
                         unsettled_pnl: details.unsettled_pnl || 'N/A',
+                        pnl: details.pnl || 0,
                         orders: orders.map(order => ({
                             order_id: order.order_id,
                             type: order.type,
@@ -324,25 +379,14 @@
                             quantity: order.quantity,
                             average_executed_price: order.average_executed_price,
                             status: order.status,
-                            realized_pnl: order.realized_pnl,
+                            realized_pnl: order.realized_pnl || 0,
                             total_fee: order.total_fee,
                             created_time: order.created_time
                         }))
                     };
                 } catch (error) {
                     console.error('Error fetching additional details:', error);
-                    return {
-                        position_qty: 0,
-                        total_collateral_value: 0,
-                        average_open_price: 'N/A',
-                        cost_position: 'N/A',
-                        mark_price: 'N/A',
-                        est_liq_price: 'N/A',
-                        fee_24_h: 'N/A',
-                        pnl_24_h: 'N/A',
-                        unsettled_pnl: 'N/A',
-                        orders: []
-                    };
+                    throw error;
                 }
             }
 
@@ -356,12 +400,9 @@
                 return positionQty > 0 ? 'BUY' : 'SELL';
             }
 
-            function calculateSummary(orders) {
-                return orders.reduce((summary, order) => {
-                    summary.totalRealizedPNL += order.realized_pnl;
-                    summary.totalFees += order.total_fee;
-                    return summary;
-                }, { totalRealizedPNL: 0, totalFees: 0 });
+            function getSideClass(positionQty) {
+                if (positionQty === 0) return 'side-closed';
+                return positionQty > 0 ? 'side-long' : 'side-short';
             }
 
             setInterval(updateRefreshTimer, 1000);
