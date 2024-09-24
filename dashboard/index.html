@@ -8,9 +8,9 @@
     <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
     <style>
         body {
-            background-color: #181818;
-            color: #fff;
-            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
@@ -20,7 +20,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            background-color: #181818;
+            background-color: #1e1e1e;
             width: 100%;
         }
 
@@ -33,34 +33,77 @@
             max-width: 1200px;
             margin: 40px auto;
             padding: 30px;
-            background-color: #222;
+            background-color: #1e1e1e;
             border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
         .refresh-timer {
             text-align: center;
-            color: #ff8c00;
+            color: #ff9800;
             font-size: 16px;
             margin-bottom: 20px;
         }
 
-        table {
+        /* Main table styles */
+        #positionsTable {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0 8px;
         }
 
-        th {
-            background-color: #ff8c00;
-            color: white;
+        #positionsTable th {
+            background-color: #ff9800;
+            color: #121212;
             padding: 15px;
             text-align: left;
+            transition: background-color 0.3s ease;
         }
 
-        td {
+        #positionsTable th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        #positionsTable th:last-child {
+            border-top-right-radius: 10px;
+        }
+
+        #positionsTable td {
             background-color: #2a2a2a;
             padding: 15px;
+            transition: background-color 0.3s ease;
+        }
+
+        #positionsTable tbody tr:hover td {
+            background-color: #3a3a3a;
+        }
+
+        /* Orders table styles (in expanded details) */
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+            background-color: #2a2a2a;
+        }
+
+        .orders-table th {
+            background-color: #333;
+        }
+
+        .orders-table tbody tr:hover td {
+            background-color: #3a3a3a;
+        }
+
+        /* Ensure the summary row doesn't change on hover */
+        tr.summary-row:hover td {
+            background-color: #333 !important;
         }
 
         .status-dot {
@@ -81,15 +124,21 @@
         }
 
         .expand-button {
-            background-color: #ff8c00;
+            background-color: #ff9800;
             border: none;
-            color: white;
+            color: #121212;
             padding: 8px 16px;
             text-align: center;
             font-size: 14px;
             cursor: pointer;
             border-radius: 12px;
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .expand-button:hover {
+            background-color: #ffa726;
+            transform: translateY(-2px);
         }
 
         .details {
@@ -128,7 +177,7 @@
         }
 
         .summary-row td {
-            border-top: 2px solid #ff8c00;
+            border-top: 2px solid #ff9800;
         }
 
         .pnl-positive {
@@ -166,26 +215,91 @@
 
         .side-buy {
             color: #4caf50;
-            /* Green */
         }
 
         .side-sell {
             color: #ff4d4d;
-            /* Red */
         }
 
         #userIdSelect, #loadWallets {
             font-size: 16px;
             margin-right: 10px;
             margin-bottom: 10px;
+            padding: 8px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        #userIdSelect:hover, #loadWallets:hover {
+            background-color: #3a3a3a;
         }
 
         #loadWallets {
-            background-color: #ff8c00;
-            color: white;
+            background-color: #ff9800;
+            color: #121212;
             border: none;
-            padding: 5px 10px;
             cursor: pointer;
+        }
+
+        #loadWallets:hover {
+            background-color: #ffa726;
+        }
+
+        /* Styles for the Order ID table in expanded details */
+        #positionsTable .details .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        #positionsTable .details .orders-table th {
+            background-color: #ff9800;
+            color: #121212;
+            padding: 10px;
+            text-align: left;
+        }
+
+        #positionsTable .details .orders-table td {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border: 1px solid #444;
+        }
+
+        #positionsTable .details .orders-table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+
+        #positionsTable .details .orders-table tbody tr:hover td {
+            background-color: #3a3a3a;
+        }
+
+        /* Ensure text colors are correct */
+        #positionsTable .details .orders-table .side-buy {
+            color: #4caf50;
+        }
+
+        #positionsTable .details .orders-table .side-sell {
+            color: #ff4d4d;
+        }
+
+        #positionsTable .details .orders-table .pnl-positive {
+            color: #4caf50;
+        }
+
+        #positionsTable .details .orders-table .pnl-negative {
+            color: #ff4d4d;
+        }
+
+        #positionsTable .details .orders-table .fees-negative {
+            color: #ff4d4d;
+        }
+
+        /* Ensure the header row doesn't change on hover */
+        #positionsTable .details .orders-table thead tr:hover th {
+            background-color: #ff9800;
         }
     </style>
 </head>
