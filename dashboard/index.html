@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUNL.AI</title>
+    <link rel="icon" href="https://funl.ai/wp-content/uploads/2024/03/FUNLAIFavicon-150x150.png" sizes="32x32">
+    <style>
+        body {
+            background-color: #181818;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-color: #181818;
+            width: 100%;
+        }
+
+        .header img {
+            height: 60px;
+            width: auto;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #222;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .refresh-timer {
+            text-align: center;
+            color: #ff8c00;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        th {
+            background-color: #ff8c00;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+
+        td {
+            background-color: #2a2a2a;
+            padding: 15px;
+        }
+
+        .status-dot {
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .side-short {
+            color: #ff4d4d;
+        }
+
+        .side-long {
+            color: #4caf50;
+        }
+
+        .side-closed {
+            color: #888;
+        }
+
+        .expand-button {
+            background-color: #ff8c00;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .details {
+            display: none;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
+        .expanded {
+            display: table-row;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .orders-table th {
+            background-color: #333;
+        }
+
+        .summary-row {
+            background-color: #333 !important;
+            color: #fff !important;
+            font-weight: bold;
+        }
+
+        .summary-row td {
+            border-top: 2px solid #ff8c00;
+        }
+
+        .pnl-positive {
+            color: #4caf50;
+        }
+
+        .pnl-negative {
+            color: #ff4d4d;
+        }
+
+        .fees-negative {
+            color: #ff4d4d;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .details-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-summary {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+
+        .orders-table {
+            grid-column: 1 / -1;
+            margin-top: 10px;
+        }
+
+        .side-buy {
+            color: #4caf50;
+            /* Green */
+        }
+
+        .side-sell {
+            color: #ff4d4d;
+            /* Red */
+        }
+
+        #userIdSelect, #loadWallets {
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        #loadWallets {
+            background-color: #ff8c00;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
+    </div>
+    <div class="content">
+        <select id="userIdSelect">
+            <option value="">Select a User ID</option>
+        </select>
+        <button id="loadWallets">Load Wallets</button>
+        <div class="refresh-timer" id="refresh-timer">Next refresh in: 2:30</div>
+        <table id="positionsTable">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Wallet</th>
+                    <th>Status</th>
+                    <th>Quantity</th>
+                    <th>Side</th>
+                    <th>Symbol</th>
+                    <th>Collateral</th>
+                    <th>PNL</th>
+                    <th>Fees</th>
+                    <th>NET</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let walletData = [];
+            const userIdSelect = document.getElementById('userIdSelect');
+            const loadWalletsButton = document.getElementById('loadWallets');
+            const refreshTimerElement = document.getElementById('refresh-timer');
+            const positionsTableBody = document.getElementById('positionsTable').getElementsByTagName('tbody')[0];
+            let refreshTime = 180;
+
+            // Agent to symbol lookup table
+            const agentSymbolLookup = {
+                'Daytona1': 'PERP_BTC_USDC',
+                'Daytona2': 'PERP_SOL_USDC',
+                'Daytona3': 'PERP_ETH_USDC',
+                'Daytona4': 'PERP_BRETT_USDC',
+                'Daytona5': 'PERP_PEPE_USDC',
+                'Excalibur1': 'PERP_ETH_USDC',
+                'Excalibur2': 'PERP_BTC_USDC'
+                // Add more mappings as needed
+            };
+
+            // Fetch wallet data from the API and populate the user ID dropdown
+            fetch('https://data.dbltecnologia.com.br:4433/get_wallets')
+                .then(response => response.json())
+                .then(data => {
+                    const uniqueUserIds = [...new Set(data.wallets.map(wallet => wallet.userId))];
+                    uniqueUserIds.sort((a, b) => parseInt(a) - parseInt(b));
+                    uniqueUserIds.forEach(userId => {
+                        const option = document.createElement('option');
+                        option.value = userId;
+                        option.textContent = userId;
+                        userIdSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching wallet data:', error));
+
+            loadWalletsButton.addEventListener('click', function() {
+                const selectedUserId = userIdSelect.value;
+                if (selectedUserId) {
+                    fetch('https://data.dbltecnologia.com.br:4433/get_wallets')
+                        .then(response => response.json())
+                        .then(data => {
+                            walletData = data.wallets
+                                .filter(wallet => wallet.userId === selectedUserId)
+                                .flatMap(wallet => wallet.agents.map(agent => ({
+                                    agent: agent,
+                                    wallet: wallet.address,
+                                    symbol: agentSymbolLookup[agent] || 'UNKNOWN'
+                                })));
+                            fetchData();
+                        })
+                        .catch(error => console.error('Error fetching wallet data:', error));
+                }
+            });
+
+            function updateRefreshTimer() {
+                const minutes = Math.floor(refreshTime / 60);
+                const seconds = refreshTime % 60;
+                refreshTimerElement.innerText = `Next refresh in: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (refreshTime > 0) {
+                    refreshTime--;
+                } else {
+                    refreshTime = 180;
+                    fetchData();
+                }
+            }
+
+            async function fetchData() {
+                try {
+                    let totalCollateralSum = 0;
+                    let totalPNLSum = 0;
+                    let totalFeesSum = 0;
+                    let totalNetSum = 0;
+
+                    positionsTableBody.innerHTML = '';
+
+                    for (const position of walletData) {
+                        try {
+                            const details = await fetchAdditionalDetails(position.wallet, position.symbol);
+                            console.log('Fetched details for', position.agent, details);
+
+                            const positionQty = parseFloat(details.position_qty) || 0;
+                            const collateral = parseFloat(details.total_collateral_value) || 0;
+                            const realizedPnl = parseFloat(details.total_realized_pnl) || 0;
+                            const totalFees = parseFloat(details.total_fees) || 0;
+                            const net = realizedPnl - totalFees;
+
+                            totalCollateralSum += collateral;
+                            totalPNLSum += realizedPnl;
+                            totalFeesSum += totalFees;
+                            totalNetSum += net;
+
+                            const positionRow = document.createElement('tr');
+                            positionRow.innerHTML = `
+                                <td>${position.agent}</td>
+                                <td>${position.wallet.slice(0, 6)}...${position.wallet.slice(-4)}</td>
+                                <td class="status-dot">${getStatusSymbol(positionQty)}</td>
+                                <td>${Math.abs(positionQty).toFixed(4)}</td>
+                                <td class="${getSideClass(positionQty)}">${getSideText(positionQty)}</td>
+                                <td>${position.symbol}</td>
+                                <td>$${collateral.toFixed(2)}</td>
+                                <td class="${realizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${realizedPnl.toFixed(2)}</td>
+                                <td class="fees-negative">$${totalFees.toFixed(2)}</td>
+                                <td class="${net >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${net.toFixed(2)}</td>
+                                <td><button class="expand-button" data-wallet="${position.wallet}" data-symbol="${position.symbol}">Expand</button></td>
+                            `;
+                            positionsTableBody.appendChild(positionRow);
+
+                            // Create details row
+                            const detailsRow = document.createElement('tr');
+                            detailsRow.className = 'details';
+                            detailsRow.setAttribute('data-wallet', position.wallet);
+                            detailsRow.style.display = 'none';
+                            detailsRow.innerHTML = `
+                                <td colspan="11">
+                                    <div class="details-grid">
+                                        <div class="details-column">
+                                            <div>Average Open Price: ${details.average_open_price}</div>
+                                            <div>Cost Position: ${details.cost_position}</div>
+                                            <div>Mark Price: ${details.mark_price}</div>
+                                            <div>Estimated Liquidation Price: ${details.est_liq_price}</div>
+                                        </div>
+                                        <div class="details-column">
+                                            <div>Fee (24h): ${details.fee_24_h}</div>
+                                            <div>PnL (24h): ${details.pnl_24_h}</div>
+                                            <div>Unsettled PnL: ${details.unsettled_pnl}</div>
+                                        </div>
+                                    </div>
+                                    <div class="order-summary">
+                                        <h4>Order Summary:</h4>
+                                        <p>Total Realized PNL: <span class="${realizedPnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${realizedPnl.toFixed(2)}</span></p>
+                                        <p>Total Fees: <span class="fees-negative">$${totalFees.toFixed(2)}</span></p>
+                                    </div>
+                                    <table class="orders-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Type</th>
+                                                <th>Side</th>
+                                                <th>Quantity</th>
+                                                <th>Avg. Price</th>
+                                                <th>Status</th>
+                                                <th>Realized PNL</th>
+                                                <th>Total Fee</th>
+                                                <th>Created Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${details.orders.map(order => `
+                                                <tr>
+                                                    <td>${order.order_id}</td>
+                                                    <td>${order.type}</td>
+                                                    <td class="${order.side.toLowerCase() === 'buy' ? 'side-buy' : 'side-sell'}">${order.side}</td>
+                                                    <td>${order.quantity}</td>
+                                                    <td>${order.average_executed_price}</td>
+                                                    <td>${order.status}</td>
+                                                    <td class="${order.realized_pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${order.realized_pnl.toFixed(6)}</td>
+                                                    <td class="fees-negative">${order.total_fee}</td>
+                                                    <td>${new Date(order.created_time).toLocaleString()}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            `;
+                            positionsTableBody.appendChild(detailsRow);
+                        } catch (error) {
+                            console.error('Error processing position:', position.agent, error);
+                            // Display position with default values if there's an error
+                            const positionRow = document.createElement('tr');
+                            positionRow.innerHTML = `
+                                <td>${position.agent}</td>
+                                <td>${position.wallet.slice(0, 6)}...${position.wallet.slice(-4)}</td>
+                                <td><span class="status-dot status-closed">✖</span></td>
+                                <td>0.0000</td>
+                                <td class="side-closed">CLOSED</td>
+                                <td>${position.symbol}</td>
+                                <td>$0.00</td>
+                                <td>$0.00</td>
+                                <td>$0.00</td>
+                                <td>$0.00</td>
+                                <td><button class="expand-button" data-wallet="${position.wallet}" data-symbol="${position.symbol}">Expand</button></td>
+                            `;
+                            positionsTableBody.appendChild(positionRow);
+                        }
+                    }
+
+                    // Update the summary row
+                    const summaryRow = document.createElement('tr');
+                    summaryRow.className = 'summary-row';
+                    summaryRow.innerHTML = `
+                        <td colspan="6" style="text-align: right;"><strong>Totals:</strong></td>
+                        <td><strong>$${totalCollateralSum.toFixed(2)}</strong></td>
+                        <td><strong class="${totalPNLSum >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalPNLSum.toFixed(2)}</strong></td>
+                        <td><strong class="fees-negative">$${totalFeesSum.toFixed(2)}</strong></td>
+                        <td><strong class="${totalNetSum >= 0 ? 'pnl-positive' : 'pnl-negative'}">$${totalNetSum.toFixed(2)}</strong></td>
+                        <td></td>
+                    `;
+                    positionsTableBody.appendChild(summaryRow);
+
+                    // Add event listeners to expand buttons
+                    document.querySelectorAll('.expand-button').forEach(button => {
+                        button.addEventListener('click', function () {
+                            const wallet = this.getAttribute('data-wallet');
+                            const detailsRow = document.querySelector(`.details[data-wallet="${wallet}"]`);
+                            if (detailsRow) {
+                                detailsRow.style.display = detailsRow.style.display === 'none' ? 'table-row' : 'none';
+                                this.textContent = detailsRow.style.display === 'none' ? 'Expand' : 'Collapse';
+                            }
+                        });
+                    });
+                } catch (error) {
+                    console.error('Error in fetchData:', error);
+                }
+            }
+
+            async function fetchAdditionalDetails(wallet, symbol) {
+                try {
+                    const positionResponse = await fetch(`https://data.dbltecnologia.com.br/positions?account=${wallet}`);
+                    const orderResponse = await fetch(`https://data.dbltecnologia.com.br/orders?account=${wallet}&symbol=${symbol}`);
+                    const positionData = await positionResponse.json();
+                    const orderData = await orderResponse.json();
+
+                    console.log('Position data:', positionData);
+                    console.log('Order data:', orderData);
+
+                    let details = {};
+                    let totalCollateral = 0;
+                    let totalFees = 0;
+                    let totalRealizedPNL = 0;
+
+                    if (positionData.data && positionData.data.data) {
+                        totalCollateral = positionData.data.data.total_collateral_value || 0;
+                        if (positionData.data.data.rows && positionData.data.data.rows.length > 0) {
+                            details = positionData.data.data.rows[0];
+                        }
+                    }
+
+                    if (orderData.data && orderData.data.data && orderData.data.data.rows) {
+                        totalFees = orderData.data.data.rows.reduce((sum, order) => sum + parseFloat(order.total_fee || 0), 0);
+                        totalRealizedPNL = orderData.data.data.rows.reduce((sum, order) => sum + parseFloat(order.realized_pnl || 0), 0);
+                    }
+
+                    return {
+                        position_qty: details.position_qty || 0,
+                        total_collateral_value: totalCollateral,
+                        average_open_price: details.average_open_price || 'N/A',
+                        cost_position: details.cost_position || 'N/A',
+                        mark_price: details.mark_price || 'N/A',
+                        est_liq_price: details.est_liq_price || 'N/A',
+                        fee_24_h: details.fee_24_h || 'N/A',
+                        pnl_24_h: details.pnl_24_h || 'N/A',
+                        unsettled_pnl: details.unsettled_pnl || 'N/A',
+                        total_realized_pnl: totalRealizedPNL,
+                        total_fees: totalFees,
+                        orders: orderData.data && orderData.data.data ? orderData.data.data.rows : []
+                    };
+                } catch (error) {
+                    console.error('Error fetching additional details:', error);
+                    throw error;
+                }
+            }
+
+            function getStatusSymbol(positionQty) {
+                if (positionQty === 0) return '✖️'; // CLOSED
+                return positionQty > 0 ? '🟢' : '🔴'; // LONG or SHORT
+            }
+
+            function getSideText(positionQty) {
+                if (positionQty === 0) return 'CLOSED';
+                return positionQty > 0 ? 'BUY' : 'SELL';
+            }
+
+            function getSideClass(positionQty) {
+                if (positionQty === 0) return 'side-closed';
+                return positionQty > 0 ? 'side-long' : 'side-short';
+            }
+
+            setInterval(updateRefreshTimer, 1000);
+        });
+
+        function sortTable(n) {
+            const table = document.getElementById('positionsTable');
+            let switching = true;
+            let dir = 'asc';
+            let switchcount = 0;
+
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+
+                for (let i = 1; i < rows.length - 1; i++) {
+                    let shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName('TD')[n];
+                    const y = rows[i + 1].getElementsByTagName('TD')[n];
+
+                    if (dir === 'asc') {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir === 'desc') {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount === 0 && dir === 'asc') {
+                        dir = 'desc';
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
