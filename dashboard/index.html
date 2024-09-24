@@ -258,7 +258,7 @@
                 })
                 .catch(error => console.error('Error fetching wallet data:', error));
 
-            loadWalletsButton.addEventListener('click', function() {
+            loadWalletsButton.addEventListener('click', function () {
                 const selectedUserId = userIdSelect.value;
                 if (selectedUserId) {
                     fetch('https://data.dbltecnologia.com.br:4433/get_wallets')
