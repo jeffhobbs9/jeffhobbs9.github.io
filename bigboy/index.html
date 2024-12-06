@@ -382,8 +382,8 @@
 
             async function fetchAdditionalDetails(wallet, symbol) {
                 try {
-                    const positionResponse = await fetch(`https://data.dbltecnologia.com.br/positions?account=${wallet}`);
-                    const orderResponse = await fetch(`https://data.dbltecnologia.com.br/orders?account=${wallet}&symbol=${symbol}`);
+                    const positionResponse = await fetch(`https://apifunl.dbltecnologia.com.br/positions?account=${wallet}`);
+                    const orderResponse = await fetch(`https://apifunl.dbltecnologia.com.br/orders?account=${wallet}&symbol=${symbol}`);
                     const positionData = await positionResponse.json();
                     const orderData = await orderResponse.json();
 
