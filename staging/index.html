@@ -149,7 +149,7 @@
 
       async function fetchData() {
         try {
-          const response = await fetch('https://staging.dbltecnologia.com.br/orders_live');
+          const response = await fetch('https://apifunlstaging.dbltecnologia.com.br/orders_live');
           const data = await response.json();
 
           positionsTableBody.innerHTML = '';
@@ -216,7 +216,7 @@
 
       async function fetchAdditionalDetails(wallet) {
         try {
-          const response = await fetch(`https://staging.dbltecnologia.com.br/positions?account=${wallet}`);
+          const response = await fetch(`https://apifunlstaging.dbltecnologia.com.br/positions?account=${wallet}`);
           const data = await response.json();
 
           if (data.data && data.data.data && data.data.data.rows.length > 0) {
