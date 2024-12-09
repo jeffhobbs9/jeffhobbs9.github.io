@@ -204,7 +204,7 @@
     async function fetchLogs() {
       const logTableBody = document.getElementById('logTableBody');
       try {
-        const response = await fetch('https://staging.dbltecnologia.com.br/logs');
+        const response = await fetch('https://apifunlstaging.dbltecnologia.com.br/logs');
         const data = await response.json();
         const logs = data.logs;
 
