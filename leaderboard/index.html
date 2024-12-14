@@ -30,7 +30,7 @@
         }
 
         .content {
-            max-width: 1200px;
+            max-width: 600px;
             margin: 40px auto;
             padding: 30px;
             background-color: #222;
@@ -42,6 +42,19 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0 8px;
+            table-layout: fixed;
+        }
+
+        th:nth-child(1), td:nth-child(1) {
+            width: 15%;
+        }
+
+        th:nth-child(2), td:nth-child(2) {
+            width: 45%;
+        }
+
+        th:nth-child(3), td:nth-child(3) {
+            width: 40%;
         }
 
         th {
