@@ -94,32 +94,41 @@
     </style>
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
-            // Fetch real data from the API
-            const response = await fetch('https://sdkfunl.dbltecnologia.com.br/volume_daily');
+            const response = await fetch('https://sdkfunl.dbltecnologia.com.br/volume_daily?start_date=2024-11-01&end_date=2024-12-21&sort=descending_perp_volume');
             const result = await response.json();
             
-            // Process and aggregate the data by account
-            const accountVolumes = {};
+            // Aggregate volumes by wallet address
+            const walletVolumes = {};
             result.data.rows.forEach(row => {
-                if (!accountVolumes[row.account_id]) {
-                    accountVolumes[row.account_id] = {
-                        accountId: row.account_id,
+                if (!walletVolumes[row.address]) {
+                    walletVolumes[row.address] = {
                         wallet: row.address,
-                        volume: 0
+                        volume: 0,
+                        maker_volume: 0,
+                        taker_volume: 0,
+                        total_fee: 0
                     };
                 }
-                accountVolumes[row.account_id].volume += row.perp_volume;
+                walletVolumes[row.address].volume += row.perp_volume;
+                walletVolumes[row.address].maker_volume += row.perp_maker_volume;
+                walletVolumes[row.address].taker_volume += row.perp_taker_volume;
+                walletVolumes[row.address].total_fee += row.total_fee;
             });
 
             // Convert to array and sort by volume
-            const data = Object.values(accountVolumes)
-                .sort((a, b) => b.volume - a.volume)
-                .slice(0, 10); // Show top 10 traders
+            const topTraders = Object.values(walletVolumes)
+                .sort((a, b) => b.volume - a.volume);
 
+            // Calculate total volume
+            const totalVolume = topTraders.reduce((sum, trader) => sum + trader.volume, 0);
+            document.getElementById('totalVolume').textContent = 
+                `$${Math.round(totalVolume).toLocaleString()}`;
+
+            // Update table
             const tbody = document.querySelector("tbody");
             tbody.innerHTML = "";
 
-            data.forEach((entry, index) => {
+            topTraders.forEach((trader, index) => {
                 const tr = document.createElement("tr");
                 if (index === 0) {
                     tr.classList.add("leader-highlight");
@@ -128,12 +137,12 @@
                 }
 
                 // Format wallet address to show only first 4 and last 4 characters
-                const formattedWallet = `${entry.wallet.slice(0, 4)}***${entry.wallet.slice(-4)}`;
-
+                const formattedWallet = `${trader.wallet.slice(0, 4)}***${trader.wallet.slice(-4)}`;
+                
                 tr.innerHTML = `
                     <td class="rank">${index + 1}</td>
-                    <td>${formattedWallet}</td>
-                    <td class="volume">$${Math.round(entry.volume).toLocaleString()}</td>
+                    <td style="font-family: monospace;">${formattedWallet}</td>
+                    <td class="volume">$${Math.round(trader.volume).toLocaleString()}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -147,13 +156,16 @@
         <img src="https://funl.ai/wp-content/uploads/2024/03/funlewhite.png" alt="FUNL.AI Logo">
     </div>
     <div class="content">
-        <h2 style="text-align: center;">Funl Daily Trading Volume Leaderboard</h2>
+        <h2 style="text-align: center;">Top Traders</h2>
+        <div class="total-volume" style="text-align: center; margin-bottom: 20px; color: #00ff88; font-size: 1.2em;">
+            Trading Volume (Nov 1 - Dec 21): <span id="totalVolume">Loading...</span>
+        </div>
         <table>
             <thead>
                 <tr>
                     <th>Rank</th>
                     <th>Wallet Address</th>
-                    <th>Volume (USD)</th>
+                    <th>Volume</th>
                 </tr>
             </thead>
             <tbody>
