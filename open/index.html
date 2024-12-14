@@ -213,7 +213,7 @@
 
       async function fetchAdditionalDetails(wallet) {
         try {
-          const response = await fetch(`https://data.dbltecnologia.com.br/positions?account=${wallet}`);
+          const response = await fetch(`https://apifunl.dbltecnologia.com.br/positions?account=${wallet}`);
           const data = await response.json();
 
           if (data.data && data.data.data && data.data.data.rows.length > 0) {
